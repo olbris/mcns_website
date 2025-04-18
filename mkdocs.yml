@@ -1,0 +1,44 @@
+site_name: MaleCNS connectome
+site_description: Project website for the MaleCNS connectome
+site_url: https://mydomain.org/mysite
+copyright: Copyright &copy; 2025 Janelia Research Campus
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/HHMIJanelia
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/@hhmi
+
+nav:
+  - Home: index.md
+  - Explore:
+      - Overview: explore/index.md
+  - Dimorphism: build/dimorphism_overview.md
+  - Gallery: media.md
+  - Download: download.md
+  - Cite: cite.md
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.path
+    - header.autohide
+  logo: assets/flyem_logo_white.svg
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - tables
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
