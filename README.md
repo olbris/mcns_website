@@ -1,5 +1,8 @@
 # Website to accompany the male CNS connectome
 
+> [!CAUTION]
+> This repository currently builds neuroglancer links using the MCNS DVID server as source. Making the repo or the website public as is risks leaking the server address.
+
 ## TODOs
 
 ### Dimorphism overview
