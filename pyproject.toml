@@ -6,7 +6,8 @@ readme = "README.md"
 requires-python = ">=3.11.8"
 dependencies = [
     "cocoa",
-    "d3blocks>=1.4.11",
+    "d3graph>=2.5.0",
+    "dvidtools>=0.5.0",
     "jinja2>=3.1.6",
     "mkdocs-material>=9.6.11",
     "navis",

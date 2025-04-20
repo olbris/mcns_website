@@ -638,28 +638,6 @@ wheels = [
 ]
 
 [[package]]
-name = "d3blocks"
-version = "1.4.11"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "colourmap" },
-    { name = "d3graph" },
-    { name = "datazets" },
-    { name = "elasticgraph" },
-    { name = "ismember" },
-    { name = "jinja2" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "requests" },
-    { name = "scikit-learn" },
-    { name = "tqdm" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/0c/b1937ba18ca4f6d4eb1ed2e2cccda4a7b688711eb61f5bceb139c2bf9650/d3blocks-1.4.11.tar.gz", hash = "sha256:6c12c5f1f662764593873f19d2e16ce9dcafa5be47b6b952c648c9ef4d81c3ac", size = 1413714 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/21/5f5b8b0de6047830abfdbee8ecd88909b9d753bcd7645a8c173d57c32bab/d3blocks-1.4.11-py3-none-any.whl", hash = "sha256:9ae0671fdf08af39264ee69af6808559b17616f19a281d31201cb18ae2b2b124", size = 1432053 },
-]
-
-[[package]]
 name = "d3graph"
 version = "2.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -837,19 +815,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2a/92/734a4ab345914259cb6146fd36512608ea42be16195375c379046f33283d/editor-1.6.6.tar.gz", hash = "sha256:bb6989e872638cd119db9a4fce284cd8e13c553886a1c044c6b8d8a160c871f8", size = 3197 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1b/c2/4bc8cd09b14e28ce3f406a8b05761bed0d785d1ca8c2a5c6684d884c66a2/editor-1.6.6-py3-none-any.whl", hash = "sha256:e818e6913f26c2a81eadef503a2741d7cca7f235d20e217274a009ecd5a74abf", size = 4017 },
-]
-
-[[package]]
-name = "elasticgraph"
-version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "d3graph" },
-    { name = "jinja2" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/3b/7ed6e996c0f889bf66d85628303d61e32eb46417cdc69d5886d6869a6cec/elasticgraph-0.2.0.tar.gz", hash = "sha256:f3b1d25cd7f9cde29878f24ce8c9076e861227c17311bfb3b6d1a0abf2233e54", size = 82344 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/7e/f6/c4537463a36fe6a740913a52474b550db7a6d888ad2219e8ca21df1ab529/elasticgraph-0.2.0-py3-none-any.whl", hash = "sha256:0c734378a8214c394d474ff35acc115204d7f19ea621d83cf9aa8135cb9d909e", size = 82841 },
 ]
 
 [[package]]
@@ -1447,14 +1412,14 @@ wheels = [
 
 [[package]]
 name = "ismember"
-version = "1.0.4"
+version = "1.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1d/a4/642e7869200adb802a5fc7f655330440fea2a315db720aafe83fd3755fad/ismember-1.0.4.tar.gz", hash = "sha256:63ba905ebc602f63dbeecf2f3781554058e87bc3bdcc879f3047e8ab323c7198", size = 6873 }
+sdist = { url = "https://files.pythonhosted.org/packages/b8/43/059a58f5f626549c5337b9071c9c8ec3de5f1e80d21b0c732c5a7324fa7b/ismember-1.0.5.tar.gz", hash = "sha256:4bb0e7c75fb8b512fbe0e87564bcad638f2eaa76f72099041115e42020cd768d", size = 6865 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/e1/459ad956a7423e5f940ed4ef8fc40809aca4de041f63aa538cbfd3770325/ismember-1.0.4-py3-none-any.whl", hash = "sha256:59c248b472485615e23dd8459eec01752dab581c50dc52da3279f4dad440c49c", size = 7684 },
+    { url = "https://files.pythonhosted.org/packages/77/59/8ff585b3a35266cf50bbc4e3f637ac97fb4ab9b643039481c471dfe26534/ismember-1.0.5-py3-none-any.whl", hash = "sha256:0a0102aa0e54d18f35bc7bdaeb9ab7a39bd54e3597f35e7a45d9f2628850612c", size = 7692 },
 ]
 
 [[package]]
@@ -1719,7 +1684,8 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "cocoa" },
-    { name = "d3blocks" },
+    { name = "d3graph" },
+    { name = "dvidtools" },
     { name = "jinja2" },
     { name = "mkdocs-material" },
     { name = "navis" },
@@ -1733,7 +1699,8 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "cocoa", git = "https://github.com/flyconnectome/cocoa.git" },
-    { name = "d3blocks", specifier = ">=1.4.11" },
+    { name = "d3graph", specifier = ">=2.5.0" },
+    { name = "dvidtools", specifier = ">=0.5.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "mkdocs-material", specifier = ">=9.6.11" },
     { name = "navis", git = "https://github.com/navis-org/navis?rev=master" },
