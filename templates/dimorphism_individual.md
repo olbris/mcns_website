@@ -8,58 +8,51 @@ hide:
 # {{ meta.type }}
 
 
-<!-- ##### Superclass: {{ meta.superclass }}; Cell Class: {{ meta.class }} -->
-
-<!-- {% if meta.synonyms != "None" %}
-##### Synonyms
-{{ meta.synonyms }}
-{% endif %}
-
-{% if meta.matchingNotes != "None" %}
-##### Matching Notes
-{{ meta.synonyms }}
-{% endif %} -->
-
-<div style="display: flex; justify-content: space-between; gap: 20px;">
-<div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); width:50%">
-    <div style="width: 100%; display: table;">
-        <div style="display: table-row">
-            <div style="width: 30%; display: table-cell; font-weight: bold;"> Superclass: </div>
-            <div style="display: table-cell;"> {{ meta.superclass }} </div>
-        </div>
-        <div style="display: table-row">
-            <div style="width: 30%; display: table-cell; font-weight: bold;"> FlyWire Type: </div>
-            <div style="display: table-cell;"> {{ meta.flywireType }} </div>
-        </div>
-        {% if meta.synonyms != "None" %}
-        <div style="display: table-row">
-            <div style="width: 30%; display: table-cell; font-weight: bold;"> Synonyms: </div>
-            <div style="display: table-cell;"> {{ meta.synonyms }} </div>
-        </div>
-        {% endif %}
-        {% if meta.matchingNotes != "None" %}
-        <div style="display: table-row">
-            <div style="width: 30%; display: table-cell; font-weight: bold;"> Matching Notes: </div>
-            <div style="display: table-cell;"> {{ meta.matchingNotes }} </div>
-        </div>
-        {% endif %}
-        <div style="display: table-row">
-            <div style="width: 30%; display: table-cell; font-weight: bold;"> ... </div>
-            <div style="display: table-cell;"> more properties here </div>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px;">
+    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); width:40%; flex: 1; min-width: 300px;">
+        <div style="width: 100%; display: table;">
+            <div style="display: table-row">
+                <div style="width: 30%; display: table-cell; font-weight: bold;"> Superclass: </div>
+                <div style="display: table-cell;"> {{ meta.superclass }} </div>
+            </div>
+            <hr style="margin: 0;">
+            <div style="display: table-row">
+                <div style="width: 30%; display: table-cell; font-weight: bold;"> Cell Class: </div>
+                <div style="display: table-cell;"> {{ meta.class }} </div>
+            </div>
+            <hr style="margin: 0;">
+            <div style="display: table-row">
+                <div style="width: 30%; display: table-cell; font-weight: bold;"> FlyWire Type: </div>
+                <div style="display: table-cell;"> {{ meta.flywireType }} </div>
+            </div>
+            <hr style="margin: 0;">
+            {% if meta.synonyms != "None" %}
+            <div style="display: table-row">
+                <div style="width: 30%; display: table-cell; font-weight: bold;"> Synonyms: </div>
+                <div style="display: table-cell;"> {{ meta.synonyms }} </div>
+            </div>
+            <hr style="margin: 0;">
+            {% endif %}
+            {% if meta.matchingNotes != "None" %}
+            <div style="display: table-row">
+                <div style="width: 30%; display: table-cell; font-weight: bold;"> Matching Notes: </div>
+                <div style="display: table-cell;"> {{ meta.matchingNotes }} </div>
+            </div>
+            <hr style="margin: 0;">
+            {% endif %}
+            <div style="display: table-row">
+                <div style="width: 30%; display: table-cell; font-weight: bold;"> ... </div>
+                <div style="display: table-cell;"> more properties here </div>
+            </div>
         </div>
     </div>
-</div>
-
-<!-- Other things to add: number of neurons per side per sex, flywire type/hemibrain type -->
-
-<div style="text-align: center; width:60%">
-<div style="text-align: center;">
-    <iframe src="{{ meta.url }}" width="90%" height="500px" style="border:none;"></iframe>
-    <br>
-    <a href="{{ meta.url }}" target="_blank">Open in new tab</a>
-</div>
-</div>
-
+    <div style="text-align: center; width:55%; flex: 1; min-width: 300px;">
+        <div style="text-align: center;">
+            <iframe src="{{ meta.url }}" width="90%" height="500px" style="border:none;"></iframe>
+            <br>
+            <a href="{{ meta.url }}" target="_blank">Open in new tab</a>
+        </div>
+    </div>
 </div>
 
 <div style="display: flex; align-items: center; gap: 8px;">
@@ -84,12 +77,12 @@ hide:
     });
 </script>
 
-<div style="display: flex; justify-content: space-between; gap: 20px;">
-    <div style="flex: 1; text-align: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px;">
+    <div style="flex: 1; min-width: 300px; text-align: center;">
         <h4>MaleCNS</h4>
         <embed type="text/html" src="{{ meta.graph_file_mcns_rel }}" width="100%" height="500px" style="border:none;"></embed>
     </div>
-    <div style="flex: 1; text-align: center;">
+    <div style="flex: 1; min-width: 300px; text-align: center;">
         <h4>female (FlyWire)</h4>
         <embed type="text/html" src="{{ meta.graph_file_fw_rel }}" width="100%" height="500px" style="border:none;"></embed>
     </div>
