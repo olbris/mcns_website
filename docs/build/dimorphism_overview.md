@@ -7,6 +7,8 @@ hide:
 
 # :material-gender-male-female: Dimorphism Overview
 
+By comparing the male CNS to the female "FlyWire" connectome, we identified a number of sexually dimorphic neurons.
+
 ## Sexually dimorphic cell types
 
 <div class="grid cards" style="text-align: center;" markdown>
