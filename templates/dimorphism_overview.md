@@ -9,16 +9,28 @@ hide:
 
 By comparing the male CNS to the female "FlyWire" connectome, we identified a number of sexually dimorphic neurons.
 
-## Sexually dimorphic cell types
+=== "Sexually dimorphic cell types"
 
-<div class="grid cards" style="text-align: center;" markdown>
-{% for row in dimorphic_types %}
-  - [{{row.type}}]({{row.type}}.md)
-{% endfor %}
-</div>
+    <div class="grid cards" style="text-align: center;" markdown>
+    {% for row in dimorphic_types %}
+      - [{{row.type}}]({{row.type}}.md)
+    {% endfor %}
+    </div>
 
-## Male-specific cell types
+=== "Male-specific cell types"
 
-## Female-specific cell types
+    <div class="grid cards" style="text-align: center;" markdown>
+    {% for row in male_types %}
+      - [{{row.type}}]({{row.type}}.md)
+    {% endfor %}
+    </div>
+
+=== "Female-specific cell types"
+
+    <div class="grid cards" style="text-align: center;" markdown>
+    {% for row in female_types %}
+      - [{{row.type}}]({{row.type}}.md)
+    {% endfor %}
+    </div>
 
 
