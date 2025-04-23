@@ -16,22 +16,23 @@ parser = argparse.ArgumentParser(
 # Add option to force meta data update
 parser.add_argument(
     "--update-metadata",
+    action="store_false",
     help="Force update of the meta data cache.",
 )
 # Add options to skip certain steps
 parser.add_argument(
     "--skip-thumbnails",
-    action="store_true",
+    action="store_false",
     help="Skip the generation of thumbnail images.",
 )
 parser.add_argument(
     "--skip-overview",
-    action="store_true",
+    action="store_false",
     help="Skip the generation of the overview page.",
 )
 parser.add_argument(
     "--skip-profiles",
-    action="store_true",
+    action="store_false",
     help="Skip the generation of individual cell type pages.",
 )
 
