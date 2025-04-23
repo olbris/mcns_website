@@ -21,4 +21,4 @@ dependencies = [
 [tool.uv.sources]
 navis = { git = "https://github.com/navis-org/navis", rev = "master" }
 nglscenes = { git = "https://github.com/schlegelp/nglscenes", rev = "main" }
-cocoa = { git = "https://github.com/flyconnectome/cocoa.git" }
+cocoa = { git = "https://github.com/flyconnectome/cocoa", rev = "models" }

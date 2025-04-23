@@ -206,7 +206,7 @@ wheels = [
 
 [[package]]
 name = "caveclient"
-version = "7.7.0"
+version = "7.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
@@ -221,9 +221,9 @@ dependencies = [
     { name = "requests" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fd/20/ac990dba21cb9043d25784630df76fac51025726f37e259d8628e388108a/caveclient-7.7.0.tar.gz", hash = "sha256:9e1a614a7273ffd5edfc7549a3adbed4dc1dfa3fd936bb376305ba2d13501be7", size = 3225010 }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/04/fefcf457894c95e148dff6a0c6d400dc45e250f381e6caa9659687aced60/caveclient-7.7.1.tar.gz", hash = "sha256:154ba31d6373ff403ea7d09898ae571d8a3c0ac3339d8605760c32623d7a9f22", size = 3225776 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b4/1e/282b14d8a226f86058da541b3781a03d6700ecfbe8662c688471f18ef0f7/caveclient-7.7.0-py3-none-any.whl", hash = "sha256:4f8684aadfec6bd6b21b1b02f2f6f3dbebcde1fd63671bbb557ab1e4c2398a1e", size = 86797 },
+    { url = "https://files.pythonhosted.org/packages/b4/30/339e4dde2103751a9e233ad49b45ccf162c32aa62b0a9b8a2359159925eb/caveclient-7.7.1-py3-none-any.whl", hash = "sha256:48eb04af1211d08440a81ee495f3b9c470c9d442c25b31e55a5e73257a79d26e", size = 87288 },
 ]
 
 [[package]]
@@ -439,13 +439,12 @@ wheels = [
 [[package]]
 name = "cocoa"
 version = "0.1.1"
-source = { git = "https://github.com/flyconnectome/cocoa.git#54ff0e16bfaf11ac743945f80f065b63daea4c47" }
+source = { git = "https://github.com/flyconnectome/cocoa?rev=models#762a1c769abe564debafbfd5bceac19d6f674090" }
 dependencies = [
     { name = "clio-py" },
     { name = "dash" },
     { name = "dash-bootstrap-components" },
     { name = "fafbseg" },
-    { name = "fastcluster" },
     { name = "ipywidgets" },
     { name = "matplotlib" },
     { name = "networkx" },
@@ -680,14 +679,14 @@ wheels = [
 
 [[package]]
 name = "dash-bootstrap-components"
-version = "2.0.1"
+version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dash" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/8b/dc02d257265ac32f3dbda4e7c1081c2dd721e9091de19bff05557b2dd287/dash_bootstrap_components-2.0.1.tar.gz", hash = "sha256:3cc6586f37cb3fcc04bc72d3801c07b792040066a2cc78d2330885529265ec28", size = 114886 }
+sdist = { url = "https://files.pythonhosted.org/packages/87/29/a544c4ad237e281d1fd7bcbc3e0cbafc518412d8c40161e64f01d55334ef/dash_bootstrap_components-2.0.2.tar.gz", hash = "sha256:f35218f0e5e2b159121f3e010e61b3226b0a678b2f582d0bd207d42d29132cc0", size = 114848 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/3f/53d53cb3490d623b4ca56e152db0a495951fdc98ed044ca12138cfb527f9/dash_bootstrap_components-2.0.1-py3-none-any.whl", hash = "sha256:e598fc47f8fb1622eec5b06ccbfec3be9a0ed8ee4405c35bcf3c2c54b74f80c5", size = 202452 },
+    { url = "https://files.pythonhosted.org/packages/93/56/3f0b3c3247fab03f2bd4e2f85a79ef07c0f539915108685da9e94d7289d7/dash_bootstrap_components-2.0.2-py3-none-any.whl", hash = "sha256:033d87511f7a9be72657de52c0c41539e1bf2aac8fe6c0c3a00f153c1bd4ed61", size = 202908 },
 ]
 
 [[package]]
@@ -853,25 +852,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a9/60/9f30ececb7ced06bb5a6a0265f0b53dd46bc46902e2fae2cb929f8b85852/fafbseg-3.1.2.tar.gz", hash = "sha256:c9fbf67a70ba02609862652b2a46996eb6fa99f490ac1d7c75ad2368317b90cf", size = 7885280 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/b6/75dcc6a3341c0ba3493dd95b970ef1bc1807967c116084d2dd0ba58b02c2/fafbseg-3.1.2-py3-none-any.whl", hash = "sha256:233410261d265e710b0171b688e7c055678b2b5f928d0af60c2d0de820afac24", size = 7912814 },
-]
-
-[[package]]
-name = "fastcluster"
-version = "1.2.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5d/b8/f143d907d93bd4a3dd51d07c4e79b37bedbfc2177f4949bfa0d6ba0af647/fastcluster-1.2.6.tar.gz", hash = "sha256:aab886efa7b6bba7ac124f4498153d053e5a08b822d2254926b7206cdf5a8aa6", size = 173773 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/7d/51/9a75a15df26f594112968f1de267762ccd3ac7da3492f2bb4df74ba9575e/fastcluster-1.2.6-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:ce70c743490f6778b463524d1767a9ecccd31c8bd2dbb5739bb2174168c15d39", size = 69299 },
-    { url = "https://files.pythonhosted.org/packages/27/47/ab525237529c7e6e39eb704700fd91db58bebeb6d5ca0076ef2fbaac5428/fastcluster-1.2.6-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:ac1b84d4b28456a379a71451d13995eb3242143452ce9c861f8913360de842a3", size = 38560 },
-    { url = "https://files.pythonhosted.org/packages/5b/45/1c1a84efb8b6089b2318b4cbbf5a425a6a84b3d68549a4b5dd6d0eebd303/fastcluster-1.2.6-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:55b49f6033c45a28f93540847b495ed0f718b5c3f4fef446cf77e3726662e1d5", size = 40827 },
-    { url = "https://files.pythonhosted.org/packages/69/e0/67a87022793dedfa4b38e9c6ad0ce2ee72668800d31544ea6eae11fa9b76/fastcluster-1.2.6-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c1c776a4ec7594f47cd2e1e2da73a30134f1d402d7c93a81e3cb7c3d8e191173", size = 185205 },
-    { url = "https://files.pythonhosted.org/packages/91/9f/4ed758b3607b6ce26d84b00c85fa59764a0f08199d9b18efaf9a58342cac/fastcluster-1.2.6-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:aca61d16435bb7aea3901939d7d7d7e36aff9bb538123e649166a3014b280054", size = 190720 },
-    { url = "https://files.pythonhosted.org/packages/3d/e0/52fb1915461ee37498f84cf646ddbed92b2bf3e6f542cfccac1f6a813133/fastcluster-1.2.6-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:04ea4a68e0675072ca761bad33322a0e998cb43693fd41165bc420d7db40429a", size = 195001 },
-    { url = "https://files.pythonhosted.org/packages/37/6e/96a4cee1ff1452edab1f8f5bf02a291d047761211be4b1c67296f6b01a4b/fastcluster-1.2.6-cp311-cp311-win32.whl", hash = "sha256:773043d5db2790e1ff2a4e1eae0b6a60afb2a93ad2c74897a56c80bc800db04f", size = 33169 },
-    { url = "https://files.pythonhosted.org/packages/c5/2e/1406301a131605cd27cbdca56c81e59475433d5145fd05759f06cff5717c/fastcluster-1.2.6-cp311-cp311-win_amd64.whl", hash = "sha256:841d128daa6597d13781793eb482b0b566bbd58d2a9d1e2cf1b58838773beb14", size = 36305 },
 ]
 
 [[package]]
@@ -1698,7 +1678,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cocoa", git = "https://github.com/flyconnectome/cocoa.git" },
+    { name = "cocoa", git = "https://github.com/flyconnectome/cocoa?rev=models" },
     { name = "d3graph", specifier = ">=2.5.0" },
     { name = "dvidtools", specifier = ">=0.5.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
@@ -1847,11 +1827,11 @@ wheels = [
 
 [[package]]
 name = "narwhals"
-version = "1.35.0"
+version = "1.36.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ee/6a/a98fa5e9d530a428a0cd79d27f059ed65efd3a07aad61a8c93e323c9c20b/narwhals-1.35.0.tar.gz", hash = "sha256:07477d18487fbc940243b69818a177ed7119b737910a8a254fb67688b48a7c96", size = 265784 }
+sdist = { url = "https://files.pythonhosted.org/packages/65/92/503f99e2244a271aacd6c2588e0af1b59232292b217708748cdb30214dc3/narwhals-1.36.0.tar.gz", hash = "sha256:7cd860e7e066609bd8a042bb5b8e4193275532114448210a91cbd5c622b6e5eb", size = 270385 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/80/b3/5781eb874f04cb1e882a7d93cf30abcb00362a3205c5f3708a7434a1a2ac/narwhals-1.35.0-py3-none-any.whl", hash = "sha256:7562af132fa3f8aaaf34dc96d7ec95bdca29d1c795e8fcf14e01edf1d32122bc", size = 325708 },
+    { url = "https://files.pythonhosted.org/packages/42/bf/fbcbd9f8676e06ed43d644a4ddbf31478a44056487578ce67f191da430cb/narwhals-1.36.0-py3-none-any.whl", hash = "sha256:e3c50dd1d769bc145f57ae17c1f0f0da6c3d397d62cdd0bb167e9b618e95c9d6", size = 331018 },
 ]
 
 [[package]]
@@ -2323,14 +2303,14 @@ wheels = [
 
 [[package]]
 name = "prompt-toolkit"
-version = "3.0.50"
+version = "3.0.51"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "wcwidth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a1/e1/bd15cb8ffdcfeeb2bdc215de3c3cffca11408d829e4b8416dcfe71ba8854/prompt_toolkit-3.0.50.tar.gz", hash = "sha256:544748f3860a2623ca5cd6d2795e7a14f3d0e1c3c9728359013f79877fc89bab", size = 429087 }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/6e/9d084c929dfe9e3bfe0c6a47e31f78a25c54627d64a66e884a8bf5474f1c/prompt_toolkit-3.0.51.tar.gz", hash = "sha256:931a162e3b27fc90c86f1b48bb1fb2c528c2761475e57c9c06de13311c7b54ed", size = 428940 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e4/ea/d836f008d33151c7a1f62caf3d8dd782e4d15f6a43897f64480c2b8de2ad/prompt_toolkit-3.0.50-py3-none-any.whl", hash = "sha256:9b6427eb19e479d98acff65196a307c555eb567989e6d88ebbb1b509d9779198", size = 387816 },
+    { url = "https://files.pythonhosted.org/packages/ce/4f/5249960887b1fbe561d9ff265496d170b55a735b76724f10ef19f9e40716/prompt_toolkit-3.0.51-py3-none-any.whl", hash = "sha256:52742911fde84e2d423e2f9a4cf1de7d7ac4e51958f648d9540e0fb8db077b07", size = 387810 },
 ]
 
 [[package]]
