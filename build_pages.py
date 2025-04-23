@@ -56,5 +56,9 @@ if __name__ == "__main__":
     mcns_meta["mapping"] = mcns_meta["bodyId"].map(mappings)
     fw_meta["mapping"] = fw_meta["root_id"].map(mappings)
 
+    if args.clear_build:
+        # Clear the build directory
+        building.clear_build_directory()
+
     # Generate the dimorphism pages (overview and individual pages)
     building.make_dimorphism_pages(mcns_meta, fw_meta, fw_edges)

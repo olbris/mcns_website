@@ -81,3 +81,13 @@ JINJA_ENV = Environment(
 # A global neuprint client
 #####
 NEUPRINT_CLIENT = neu.Client(server="https://neuprint-cns.janelia.org", dataset="cns")
+
+#####
+# Some BASE URLs for neuPrint
+#####
+
+# Basic neuPrint search
+NEUPRINT_SEARCH_URL = "https://neuprint-cns.janelia.org/results?dataset=cns&qt=findneurons&q=1&qr%5B0%5D%5Bcode%5D=fn&qr%5B0%5D%5Bds%5D=cns&qr%5B0%5D%5Bpm%5D%5Bdataset%5D=cns&qr%5B0%5D%5Bpm%5D%5BinputMatchAny%5D=false&qr%5B0%5D%5Bpm%5D%5BoutputMatchAny%5D=false&qr%5B0%5D%5Bpm%5D%5Ball_segments%5D=false&qr%5B0%5D%5Bpm%5D%5Benable_contains%5D=true&qr%5B0%5D%5Bpm%5D%5Bneuron_name%5D={neuron_name}&qr%5B0%5D%5BvisProps%5D%5BrowsPerPage%5D=25&tab=0"
+
+# Connectivity search
+NEUPRINT_CONNECTIVITY_URL = "https://neuprint-cns.janelia.org/results?dataset=cns&qt=simpleconnection&q=1&qr%5B0%5D%5Bcode%5D=sc&qr%5B0%5D%5Bds%5D=cns&qr%5B0%5D%5Bpm%5D%5Bdataset%5D=cns&qr%5B0%5D%5Bpm%5D%5Benable_contains%5D=true&qr%5B0%5D%5Bpm%5D%5Bneuron_name%5D={neuron_name}&qr%5B0%5D%5Bpm%5D%5Bfind_inputs%5D=false&qr%5B0%5D%5BvisProps%5D%5BpaginateExpansion%5D=true&tab=0"

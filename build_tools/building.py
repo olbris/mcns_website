@@ -5,6 +5,7 @@ Functions for building the various bits and pieces of the website
 import pandas as pd
 import navis.interfaces.neuprint as neu
 
+from urllib.parse import quote_plus
 from d3graph import d3graph, vec2adjmat
 
 from .env import (
@@ -13,11 +14,13 @@ from .env import (
     THUMBNAILS_DIR,
     NGL_BASE_SCENE,
     JINJA_ENV,
+    NEUPRINT_SEARCH_URL,
+    NEUPRINT_CONNECTIVITY_URL,
 )
 
 
 def make_dimorphism_pages(mcns_meta, fw_meta, fw_edges):
-    """Generate the overview page.
+    """Generate the overview page and individual summaries for each dimorphic cell type.
 
     Parameters
     ----------
@@ -39,12 +42,26 @@ def make_dimorphism_pages(mcns_meta, fw_meta, fw_edges):
     for t, table in dimorphic_types.groupby("mapping"):
         dimorphic_meta.append({})
 
+        # Agglomerate into a single value for each column (if possible)
         for col in table.columns:
             vals = table[col].fillna("None").unique()
             if len(vals) == 1:
                 dimorphic_meta[-1][col] = vals[0]
             else:
                 dimorphic_meta[-1][col] = ", ".join(vals.astype(str))
+
+        # Add counts
+        counts = table.somaSide.value_counts()
+        dimorphic_meta[-1]["n_mcnsr"] = counts.get("R", 0)
+        dimorphic_meta[-1]["n_mcnsl"] = counts.get("L", 0)
+
+        # Generate links to neuPrint
+        dimorphic_meta[-1]["neuprint_url"] = NEUPRINT_SEARCH_URL.format(
+            neuron_name=quote_plus(dimorphic_meta[-1]["type"])
+        )
+        dimorphic_meta[-1]["neuprint_conn_url"] = NEUPRINT_CONNECTIVITY_URL.format(
+            neuron_name=quote_plus(dimorphic_meta[-1]["type"])
+        )
 
         scene = NGL_BASE_SCENE.copy()
         scene.layers[1]["segments"] = table["bodyId"].values
@@ -56,14 +73,88 @@ def make_dimorphism_pages(mcns_meta, fw_meta, fw_edges):
         if table_fw.empty:
             print(f"  No matching FlyWire type for {t}.", flush=True)
         else:
+            # Add counts
+            counts = table_fw.side.value_counts()
+            dimorphic_meta[-1]["n_fwr"] = counts.get("right", 0)
+            dimorphic_meta[-1]["n_fwl"] = counts.get("left", 0)
+
             scene.layers[2]["segments"] = table_fw["root_id"].values
             scene.layers[2]["segmentDefaultColor"] = "#e511d0"
 
         dimorphic_meta[-1]["url"] = scene.url
 
     print(f"Found {len(dimorphic_meta):,} dimorphic cell types.", flush=True)
+
+    # Filter to male-specific types
+    male_types = mcns_meta[mcns_meta.dimorphism.str.contains("male-specific", na=False)]
+
+    # !!!! Currently there are still a few supposedly male-specific neurons that
+    # do not have a type. We will drop them for now.
+    male_types = male_types[male_types.type.notnull()]
+
+    # For each type compile a dictionary with relevant data
+    male_meta = []
+    for t, table in male_types.groupby("type"):
+        male_meta.append({})
+
+        for col in table.columns:
+            vals = table[col].fillna("None").unique()
+            if len(vals) == 1:
+                male_meta[-1][col] = vals[0]
+            else:
+                male_meta[-1][col] = ", ".join(vals.astype(str))
+
+        scene = NGL_BASE_SCENE.copy()
+        scene.layers[1]["segments"] = table["bodyId"].values
+        scene.layers[1]["segmentDefaultColor"] = "#00e9e7"
+
+        male_meta[-1]["url"] = scene.url
+
+    print(f"Found {len(male_meta):,} male-specific cell types.", flush=True)
+
+    # Filter to female-specific types
+    female_types = fw_meta[
+        fw_meta.dimorphism.str.contains("female-specific", na=False)
+    ].copy()
+
+    female_types["type"] = (
+        female_types.cell_type.fillna(female_types.malecns_type)
+        .fillna(female_types.hemibrain_type)
+        .fillna("unknown")
+    )
+
+    # For each type compile a dictionary with relevant data
+    female_meta = []
+    for t, table in female_types.groupby("type"):
+        female_meta.append({})
+
+        # Agglomerate into a single value for each column (if possible)
+        for col in table.columns:
+            vals = table[col].unique()
+            if len(vals) == 1:
+                female_meta[-1][col] = vals[0]
+            else:
+                female_meta[-1][col] = ", ".join(vals.astype(str))
+
+        scene = NGL_BASE_SCENE.copy()
+        scene.layers[2]["segments"] = table["root_id"].values
+        scene.layers[2]["segmentDefaultColor"] = "#e511d0"
+
+        female_meta[-1]["url"] = scene.url
+
+    print(f"Found {len(female_meta):,} female-specific cell types.", flush=True)
+
+    # Sort the meta data by type
+    dimorphic_meta = sorted(dimorphic_meta, key=lambda x: x["type"])
+    male_meta = sorted(male_meta, key=lambda x: x["type"])
+    female_meta = sorted(female_meta, key=lambda x: x["type"])
+
     # Render the template with the meta data
-    rendered = overview_template.render(dimorphic_types=dimorphic_meta)
+    rendered = overview_template.render(
+        dimorphic_types=dimorphic_meta,
+        male_types=male_meta,
+        female_types=female_meta,
+    )
 
     #  Write the rendered HTML to a file
     with open(BUILD_DIR / "dimorphism_overview.md", "w") as f:
@@ -73,27 +164,42 @@ def make_dimorphism_pages(mcns_meta, fw_meta, fw_edges):
 
     # Generate individual pages for each dimorphic cell type
     print("Generating individual pages...", flush=True, end="")
-    # Loop through each dimorphic cell type and generate a page
-    for record in dimorphic_meta:
-        print(f"  Generating summary page for {record['type']}...", flush=True)
 
-        # Generate the graph
-        generate_graphs(
-            record["type"],
-            mcns_meta[mcns_meta["mapping"] == record["mapping"]],
-            fw_meta[fw_meta["mapping"] == record["mapping"]],
-            fw_meta,
-            fw_edges
+    # Load the template for the individual pages
+    individual_template = JINJA_ENV.get_template("dimorphism_individual.md")
+
+    # Loop through each dimorphic cell type and generate a page for it
+    for record in dimorphic_meta:
+        print(
+            f"  Generating summary page for {record['type']} (dimorphic)...", flush=True
         )
 
-        record["graph_file_mcns"] = BUILD_DIR / "graphs" / (record["type"] + "_mcns.html")
+        # Generate the graph
+        try:
+            generate_graphs(
+                record["type"],
+                mcns_meta[mcns_meta["mapping"] == record["mapping"]],
+                fw_meta[fw_meta["mapping"] == record["mapping"]],
+                fw_meta,
+                fw_edges,
+            )
+        except Exception as e:
+            print(f"  Failed to generate graph for {record['type']}: {e}", flush=True)
+
+        record["graph_file_mcns"] = (
+            BUILD_DIR / "graphs" / (record["type"] + "_mcns.html")
+        )
         record["graph_file_mcns_rel"] = f"../graphs/{record['type']}_mcns.html"
 
         record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
         record["graph_file_fw_rel"] = f"../graphs/{record['type']}_fw.html"
 
-        build_summary_page(record)
-        break
+        # Render the template with the meta data
+        rendered = individual_template.render(meta=record)
+
+        # Write the rendered HTML to a file
+        with open(BUILD_DIR / f"{record['type']}.md", "w") as f:
+            f.write(rendered)
 
     print("Done.", flush=True)
 
@@ -114,7 +220,9 @@ def generate_thumbnail(type, mcns_meta, fw_meta):
     pass
 
 
-def generate_graphs(type_name, type_meta_mcns, type_meta_fw, fw_meta_full, fw_edges, N=5):
+def generate_graphs(
+    type_name, type_meta_mcns, type_meta_fw, fw_meta_full, fw_edges, N=5
+):
     """Generate D3 graphs for the given neurons.
 
     Parameters
@@ -143,7 +251,7 @@ def generate_graphs(type_name, type_meta_mcns, type_meta_fw, fw_meta_full, fw_ed
     fw_meta_full = fw_meta_full.drop_duplicates("root_id")
 
     # Make our lives a bit easier and align column names
-    fw_edges = fw_edges.rename(columns={'syn_count': 'weight'})
+    fw_edges = fw_edges.rename(columns={"syn_count": "weight"})
 
     # First up: graph for the MCNS neurons
     if not type_meta_mcns.empty:
@@ -189,7 +297,7 @@ def generate_graphs(type_name, type_meta_mcns, type_meta_fw, fw_meta_full, fw_ed
         )
 
         # Generate the D3 graph
-        edges2d3(df, GRAPH_DIR / f"{type_name}_mcns.html", color='#00ffff')
+        edges2d3(df, GRAPH_DIR / f"{type_name}_mcns.html", color="#00ffff")
 
     # Now do the same for FlyWire
     if not type_meta_fw.empty:
@@ -237,7 +345,7 @@ def generate_graphs(type_name, type_meta_mcns, type_meta_fw, fw_meta_full, fw_ed
         )
 
         # Generate the D3 graph
-        edges2d3(df, GRAPH_DIR / f"{type_name}_fw.html", color='#ff00ff')
+        edges2d3(df, GRAPH_DIR / f"{type_name}_fw.html", color="#ff00ff")
 
 
 def edges2d3(edges, filepath, color=None):
@@ -251,7 +359,7 @@ def edges2d3(edges, filepath, color=None):
     d3.graph(adjmat, color=None)
 
     d3.set_edge_properties(directed=True, label="weight")
-    d3.set_node_properties(color=color)
+    d3.set_node_properties(color=color, fontcolor="#000000")
 
     # For some reason the library is not passing through the save_button parameter
     # and we have to render the graph manually again
@@ -269,19 +377,21 @@ def edges2d3(edges, filepath, color=None):
     return filepath
 
 
-def build_summary_page(record):
-    """Generate individual summary pages for the given dimorphic cell type.
+def clear_build_directory():
+    """Clear the build directory. This will only remove files but not the directories themselves."""
+    # Remove all files in the build directory
+    for file in BUILD_DIR.glob("*"):
+        if file.is_file():
+            file.unlink()
 
-    Parameters
-    ----------
-    record :    dict
-                The meta data for the neuron type.
-    """
-    # Load the template for the individual pages
-    individual_template = JINJA_ENV.get_template("dimorphism_individual.md")
+    # Remove all files in the graph directory
+    for file in GRAPH_DIR.glob("*"):
+        if file.is_file():
+            file.unlink()
 
-    rendered = individual_template.render(meta=record)
+    # Remove all files in the thumbnails directory
+    for file in THUMBNAILS_DIR.glob("*"):
+        if file.is_file():
+            file.unlink()
 
-    # Write the rendered HTML to a file
-    with open(BUILD_DIR / f"{record['type']}.md", "w") as f:
-        f.write(rendered)
+    print("Cleared the build directory.", flush=True)

@@ -30,6 +30,7 @@ theme:
     - navigation.tabs.sticky
     - navigation.path
     - header.autohide
+    - content.tooltips
   logo: assets/flyem_logo_white.svg
   icon:
     repo: fontawesome/brands/github
@@ -40,6 +41,7 @@ markdown_extensions:
   - pymdownx.details
   - tables
   - pymdownx.superfences
+  - footnotes
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji:
