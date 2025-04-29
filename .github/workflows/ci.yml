@@ -1,5 +1,6 @@
 name: ci
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -7,7 +8,7 @@ on:
 permissions:
   contents: write
 jobs:
-  deploy:
+  build-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,4 +27,11 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install uv
-      - run: uv run mkdocs gh-deploy --force
+      - name: build
+        env:
+          NEUPRINT_APPLICATION_CREDENTIALS: ${{ secrets.NEUPRINT_APPLICATION_CREDENTIALS }}
+          SEATABLE_SERVER: ${{ secrets.SEATABLE_SERVER }}
+          SEATABLE_TOKEN: ${{ secrets.SEATABLE_TOKEN }}
+        run: uv run build_pages.py
+      - name: deploy
+        run: uv run mkdocs gh-deploy --force
