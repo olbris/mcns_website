@@ -35,6 +35,6 @@ jobs:
           CAVE_SECRET: ${{ secrets.cave_secret }}
         run: |
             uv run python -c "import os;from caveclient import CAVEclient;client=CAVEclient();client.auth.save_token(os.getenv('CAVE_SECRET'))"
-            uv run build_pages.py
+            uv run build_pages.py --skip-thumbnails
       - name: deploy
         run: uv run mkdocs gh-deploy --force
