@@ -2,6 +2,9 @@
 Functions for building the various bits and pieces of the website
 """
 
+import logging
+import warnings
+
 import pandas as pd
 import navis.interfaces.neuprint as neu
 
@@ -24,13 +27,16 @@ from .env import (
     NEUPRINT_CONNECTIVITY_URL,
 )
 
+# Silence the d3graph logger
+logging.getLogger('d3graph').setLevel(logging.WARNING)
+
 
 def make_dimorphism_pages(
     mcns_meta: pd.DataFrame,
     fw_meta: pd.DataFrame,
     fw_edges: pd.DataFrame,
     skip_graphs: bool = False,
-):
+) -> None:
     """Generate the overview page and individual summaries for each dimorphic cell type.
 
     Parameters
