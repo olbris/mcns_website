@@ -152,7 +152,7 @@ def make_dimorphism_pages(
         rendered = individual_template.render(meta=record)
 
         # Write the rendered HTML to a file
-        with open(BUILD_DIR / f"{record['type_file']}.md", "w") as f:
+        with open(SUMMARY_TYPES_DIR / f"{record['type_file']}.md", "w") as f:
             f.write(rendered)
 
     # Loop through each male-specific cell type and generate a page for it
@@ -187,7 +187,7 @@ def make_dimorphism_pages(
         rendered = individual_template.render(meta=record)
 
         # Write the rendered HTML to a file
-        with open(BUILD_DIR / f"{record['type_file']}.md", "w") as f:
+        with open(SUMMARY_TYPES_DIR / f"{record['type_file']}.md", "w") as f:
             f.write(rendered)
 
     print("Done.", flush=True)
