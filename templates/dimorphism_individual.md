@@ -34,6 +34,20 @@ hide:
                 <div style="display: table-cell;"> {{ meta.flywireType }} </div>
             </div>
             <hr style="margin: 0;">
+            <div style="display: table-row">
+                <div style="width: 50%; display: table-cell; font-weight: bold;"> Across-brain Mapping
+                    <div style="position: relative; display: inline-block;">
+                        <button style="background-color: transparent; border: none; cursor: pointer; font-size: 16px; color: #0078D4;"><sup>&#x3F;</sup></button>
+                        <div style="visibility: hidden; width: 200px; background-color: #f9f9f9; color: #333; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; transform: translateX(-50%); box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); font-weight: normal;">
+                            A label mapping this groups of neurons between the male CNS and the FlyWire connectome, or between male CNS and the MANC dataset.
+                            <div style="position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #f9f9f9 transparent transparent transparent;"></div>
+                        </div>
+                    </div>
+                    :
+                </div>
+                <div style="display: table-cell;"> {{ meta.mapping }} </div>
+            </div>
+            <hr style="margin: 0;">
             {% if meta.hemibrainType != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Hemibrain Type: </div>
@@ -134,6 +148,7 @@ hide:
     </div>
 </div>
 
+<!-- script for tooltips -->
 <script>
     document.querySelectorAll('button').forEach(button => {
         button.addEventListener('mouseover', function() {
