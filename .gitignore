@@ -1,6 +1,9 @@
 # Ignore cached data
 .cache/
 
+# Ignore build
+docs/build
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
