@@ -32,6 +32,9 @@ jobs:
           NEUPRINT_APPLICATION_CREDENTIALS: ${{ secrets.NEUPRINT_APPLICATION_CREDENTIALS }}
           SEATABLE_SERVER: ${{ secrets.SEATABLE_SERVER }}
           SEATABLE_TOKEN: ${{ secrets.SEATABLE_TOKEN }}
-        run: uv run build_pages.py
+          CAVE_SECRET: ${{ secrets.cave_secret }}
+        run: |
+            uv run python -c "import os;from caveclient import CAVEclient;client=CAVEclient();client.auth.save_token(os.getenv('CAVE_SECRET'))"
+            uv run build_pages.py
       - name: deploy
         run: uv run mkdocs gh-deploy --force
