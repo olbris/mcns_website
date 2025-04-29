@@ -103,15 +103,15 @@ def make_dimorphism_pages(
                     f"  Failed to generate graph for {record['type']}: {e}", flush=True
                 )
 
-            record["graph_file_mcns"] = (
-                BUILD_DIR / "graphs" / (record["type"] + "_mcns.html")
-            )
-            record["graph_file_mcns_rel"] = f"../graphs/{record['type']}_mcns.html"
+        record["graph_file_mcns"] = (
+            BUILD_DIR / "graphs" / (record["type"] + "_mcns.html")
+        )
+        record["graph_file_mcns_rel"] = f"../../graphs/{record['type']}_mcns.html"
 
-            record["graph_file_fw"] = (
-                BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
-            )
-            record["graph_file_fw_rel"] = f"../graphs/{record['type']}_fw.html"
+        record["graph_file_fw"] = (
+            BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
+        )
+        record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
 
         # Render the template with the meta data
         rendered = individual_template.render(meta=record)
@@ -143,10 +143,10 @@ def make_dimorphism_pages(
                     f"  Failed to generate graph for {record['type']}: {e}", flush=True
                 )
 
-            record["graph_file_mcns"] = (
-                BUILD_DIR / "graphs" / (record["type"] + "_mcns.html")
-            )
-            record["graph_file_mcns_rel"] = f"../graphs/{record['type']}_mcns.html"
+        record["graph_file_mcns"] = (
+            BUILD_DIR / "graphs" / (record["type"] + "_mcns.html")
+        )
+        record["graph_file_mcns_rel"] = f"../../graphs/{record['type']}_mcns.html"
 
         # Render the template with the meta data
         rendered = individual_template.render(meta=record)
@@ -178,10 +178,10 @@ def make_dimorphism_pages(
                     f"  Failed to generate graph for {record['type']}: {e}", flush=True
                 )
 
-            record["graph_file_fw"] = (
-                BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
-            )
-            record["graph_file_fw_rel"] = f"../graphs/{record['type']}_fw.html"
+        record["graph_file_fw"] = (
+            BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
+        )
+        record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
 
         # Render the template with the meta data
         rendered = individual_template.render(meta=record)
