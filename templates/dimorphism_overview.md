@@ -19,7 +19,7 @@ hemi-lineage, or their synonym.
 
         <div class="grid cards" style="text-align: center;" markdown>
         {% for row in dimorphic_types %}
-          - [{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
+          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
         {% endfor %}
         </div>
 
@@ -27,7 +27,7 @@ hemi-lineage, or their synonym.
 
         <div class="grid cards" style="text-align: center;" markdown>
         {% for row in male_types %}
-          - [{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
+          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
         {% endfor %}
         </div>
 
@@ -35,7 +35,7 @@ hemi-lineage, or their synonym.
 
         <div class="grid cards" style="text-align: center;" markdown>
         {% for row in female_types %}
-          - [{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
+          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
         {% endfor %}
         </div>
 
@@ -43,26 +43,47 @@ hemi-lineage, or their synonym.
 
     _TODO_
 
-=== "By Clone"
+=== "By Clone/Synonym"
 
     _TODO_
 
 === "By Hemilineage"
 
+    _EXPLANATION/CAVEATS HERE_
+
     {% for record in hemilineages %}
-    ??? Abstract "{{ record.name }}"
+    ??? Abstract "{{ record.name }} ({{ record.fru_dsx }})"
+
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
+            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); flex: .9; min-width: 300px;">
+                <div style="width: 100%; display: table;">
+                    <!-- These are the individual properties for the summary -->
+                    <div style="display: table-row">
+                        <div style="width: 50%; display: table-cell;"> <b>Counts in Male</b> (left|right): </div>
+                        <div style="display: table-cell;"> {{ record.n_mcnsl }} | {{ record.n_mcnsr }}</div>
+                    </div>
+                    <hr style="margin: 0;">
+                    <div style="display: table-row">
+                        <div style="width: 50%; display: table-cell;"> <b>Counts in Female</b> (left|right): </div>
+                        <div style="display: table-cell;"> {{ record.n_fwl }} | {{ record.n_fwr }}</div>
+                    </div>
+                </div>
+                <!-- Links to NeuroGlancer (note also that we're adding a spacer)  -->
+                <p style="margin-top:.2cm;">
+                  <a href="{{ record.url }}" target="_blank">Open in Neuroglancer</a>
+                </p>
+            </div>
+        </div>
+
+        <h4 style="margin-top: 1.5em;">Cell Types</h4>
 
         <div class="grid cards" style="text-align: center;" markdown>
         {% for row in record.types %}
-          - [{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.type_type }})
+          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.type_type }})
         {% endfor %}
         </div>
 
     {% endfor %}
-
-=== "By Synonym"
-
-    _TODO_
 
 
 [^1]: Dorkenwald et al., Nature (2024); Schlegel et al., Nature (2024)

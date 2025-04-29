@@ -14,6 +14,8 @@ dependencies = [
     "neuprint-python>=0.5.1",
     "nglscenes",
     "numpy~=1.26",
+    "octarine-navis-plugin>=0.1.2",
+    "octarine3d",
     "pyarrow>=19.0.1",
     "requests>=2.32.3",
 ]
@@ -22,3 +24,5 @@ dependencies = [
 navis = { git = "https://github.com/navis-org/navis", rev = "master" }
 nglscenes = { git = "https://github.com/schlegelp/nglscenes", rev = "main" }
 cocoa = { git = "https://github.com/flyconnectome/cocoa", rev = "models" }
+dvidtools = { git = "https://github.com/flyconnectome/dvid_tools", rev = "master" }
+octarine3d = { git = "https://github.com/schlegelp/octarine" }

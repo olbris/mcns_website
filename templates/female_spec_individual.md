@@ -26,7 +26,7 @@ hide:
             </div>
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Supertype: </div>
-                <div style="display: table-cell;"> <a href="../supertypes/{{ meta.supertype }}">{{ meta.supertype }}</a> </div>
+                <div style="display: table-cell;"> <a href="../../supertypes/{{ meta.supertype }}">{{ meta.supertype }}</a> </div>
             </div>
             <hr style="margin: 0;">
             <div style="display: table-row">
@@ -71,14 +71,14 @@ hide:
             {% if meta.itoleeHl != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Ito & Lee): </div>
-                <div style="display: table-cell;"> <a href="../hemilineages/{{ meta.itoleeHl }}">{{ meta.ito_lee_hemilineage }}</a> </div>
+                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.itoleeHl }}">{{ meta.ito_lee_hemilineage }}</a> </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
             {% if meta.trumanHl != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Truman): </div>
-                <div style="display: table-cell;"> <a href="../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
+                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}

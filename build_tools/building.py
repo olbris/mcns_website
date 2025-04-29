@@ -2,12 +2,18 @@
 Functions for building the various bits and pieces of the website
 """
 
+import navis
 import logging
 import warnings
 
+import dvid as dv
+import numpy as np
 import pandas as pd
+import octarine as oc
+import cloudvolume as cv
 import navis.interfaces.neuprint as neu
 
+from pathlib import Path
 from typing import List, Dict
 from urllib.parse import quote_plus
 from d3graph import d3graph, vec2adjmat
@@ -25,10 +31,21 @@ from .env import (
     JINJA_ENV,
     NEUPRINT_SEARCH_URL,
     NEUPRINT_CONNECTIVITY_URL,
+    FLYWIRE_SOURCE,
+    DVID_SERVER,
+    DVID_NODE,
 )
 
 # Silence the d3graph logger
-logging.getLogger('d3graph').setLevel(logging.WARNING)
+logging.getLogger("d3graph").setLevel(logging.WARNING)
+
+MESH_BRAIN = None
+MESH_VNC = None
+OC_VIEWER = None
+
+dv.setup(DVID_SERVER, DVID_NODE)
+
+navis.patch_cloudvolume()
 
 
 def make_dimorphism_pages(
@@ -36,6 +53,7 @@ def make_dimorphism_pages(
     fw_meta: pd.DataFrame,
     fw_edges: pd.DataFrame,
     skip_graphs: bool = False,
+    skip_thumbnails: bool = False,
 ) -> None:
     """Generate the overview page and individual summaries for each dimorphic cell type.
 
@@ -47,6 +65,10 @@ def make_dimorphism_pages(
                 The meta data for the neurons as returned from FlyTable.
     fw_edges :  pd.DataFrame
                 Edge list for FlyWire neurons.
+    skip_graphs : bool
+                If True, skip generating the graphs for the neurons.
+    skip_thumbnails : bool
+                If True, skip generating the thumbnails for the neurons.
 
     Returns
     -------
@@ -62,7 +84,9 @@ def make_dimorphism_pages(
     female_meta = sorted(female_meta, key=lambda x: x["type"])
 
     # Group types by hemilineages
-    by_hemilineage = group_by_hemilineage(dimorphic_meta, male_meta, female_meta)
+    by_hemilineage = group_by_hemilineage(
+        dimorphic_meta, male_meta, female_meta, mcns_meta, fw_meta
+    )
 
     print("Generating overview page...", flush=True)
 
@@ -91,7 +115,8 @@ def make_dimorphism_pages(
     individual_template = JINJA_ENV.get_template("dimorphism_individual.md")
     for record in dimorphic_meta:
         print(
-            f"  Generating summary page for {record['type']} (dimorphic)...", flush=True
+            f"  Generating summary page for type {record['type']} (dimorphic)...",
+            flush=True,
         )
 
         # Generate the graph
@@ -109,14 +134,26 @@ def make_dimorphism_pages(
                 print(
                     f"  Failed to generate graph for {record['type']}: {e}", flush=True
                 )
-
         record["graph_file_mcns"] = (
             BUILD_DIR / "graphs" / (record["type"] + "_mcns.html")
         )
         record["graph_file_mcns_rel"] = f"../../graphs/{record['type']}_mcns.html"
-
         record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
         record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
+
+        if not skip_thumbnails:
+            # Generate the thumbnail
+            try:
+                generate_thumbnail(
+                    mcns_meta[mcns_meta["mapping"] == record["mapping"]],
+                    fw_meta[fw_meta["mapping"] == record["mapping"]],
+                    THUMBNAILS_DIR / f"{record['type_file']}.png",
+                )
+            except Exception as e:
+                print(
+                    f"  Failed to generate thumbnail for {record['type']}: {e}",
+                    flush=True,
+                )
 
         # Render the template with the meta data
         rendered = individual_template.render(meta=record)
@@ -129,7 +166,7 @@ def make_dimorphism_pages(
     individual_template = JINJA_ENV.get_template("male_spec_individual.md")
     for record in male_meta:
         print(
-            f"  Generating summary page for {record['type']} (male-specific)...",
+            f"  Generating summary page for type {record['type']} (male-specific)...",
             flush=True,
         )
 
@@ -165,7 +202,7 @@ def make_dimorphism_pages(
     individual_template = JINJA_ENV.get_template("female_spec_individual.md")
     for record in female_meta:
         print(
-            f"  Generating summary page for {record['type']} (female-specific)...",
+            f"  Generating summary page for type {record['type']} (female-specific)...",
             flush=True,
         )
 
@@ -375,9 +412,13 @@ def extract_type_data(mcns_meta, fw_meta):
 
 
 def group_by_hemilineage(
-    dimorphic_meta: List[Dict], male_meta: List[Dict], female_meta: List[Dict]
+    dimorphic_meta: List[Dict],
+    male_meta: List[Dict],
+    female_meta: List[Dict],
+    mcns_meta: pd.DataFrame,
+    fw_meta: pd.DataFrame,
 ) -> List[List[Dict]]:
-    """Group the dimorphic cell types by hemilineage.
+    """Sort the dimorphic/sex-specific cell types into hemilineages.
 
     Parameters
     ----------
@@ -446,6 +487,43 @@ def group_by_hemilineage(
         by_hemilineage[hl]["types"].append(record)
         by_hemilineage[hl]["types"][-1]["type_type"] = "female-specific"
 
+    # For each hemilineage collect some meta data
+    for hl in by_hemilineage:
+        hl_mcns = mcns_meta[(mcns_meta.itoleeHl == hl) | (mcns_meta.trumanHl == hl)]
+        hl_fw = fw_meta[(fw_meta.ito_lee_hemilineage == hl)]
+
+        if hl_mcns.fruDsx.str.contains("coexpress", na=False).any():
+            by_hemilineage[hl]["fru_dsx"] = "fru+/dsx+"
+        elif (
+            hl_mcns.fruDsx.str.contains("fru", na=False).any()
+            & hl_mcns.fruDsx.str.contains("dsx", na=False).any()
+        ):
+            by_hemilineage[hl]["fru_dsx"] = "fru+/dsx+"
+        elif hl_mcns.fruDsx.str.contains("fru", na=False).any():
+            by_hemilineage[hl]["fru_dsx"] = "fru+/dsx-"
+        elif hl_mcns.fruDsx.str.contains("fru", na=False).any():
+            by_hemilineage[hl]["fru_dsx"] = "fru-/dsx+"
+        else:
+            by_hemilineage[hl]["fru_dsx"] = "fru-/dsx-"
+
+        # Add MCNS counts
+        counts = hl_mcns.somaSide.value_counts()
+        by_hemilineage[hl]["n_mcnsr"] = counts.get("R", 0)
+        by_hemilineage[hl]["n_mcnsl"] = counts.get("L", 0)
+
+        # Add FlyWire counts
+        counts = hl_fw.side.value_counts()
+        by_hemilineage[hl]["n_fwr"] = counts.get("right", 0)
+        by_hemilineage[hl]["n_fwl"] = counts.get("left", 0)
+
+        # Generate a neuroglancer URL
+        scene = prep_scene(hl_mcns)
+        scene.layers[1]["segments"] = hl_mcns["bodyId"].values
+        scene.layers[2]["segments"] = hl_fw["root_id"].values
+
+        # Add the URL to the hemilineage
+        by_hemilineage[hl]["url"] = scene.url
+
     # Convert the dictionary to a list and sort alphabetically by name
     by_hemilineage = list(by_hemilineage.values())
     by_hemilineage = sorted(by_hemilineage, key=lambda x: x["name"])
@@ -468,61 +546,73 @@ def make_supertype_pages(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame) -> None
     # Load the template for the summary pages
     template = JINJA_ENV.get_template("supertype_individual.md")
 
-    # Filter to dimorphic super types (we may remove this in the future)
-    mcns_meta = (
-        mcns_meta[mcns_meta.dimorphism.str.contains("dimorphic", na=False)]
-        .drop(columns=["roiInfo", "inputRois", "outputRois"])
-        .copy()
+    # Collect all supertypes
+    supertypes = np.append(
+        mcns_meta.supertype.dropna().unique(), fw_meta.supertype.dropna().unique()
     )
+    supertypes = np.unique(supertypes)
 
     # For each type compile a dictionary with relevant data
     supertypes_meta = []
-    for t, table in mcns_meta.groupby("supertype"):
+    for t in supertypes:
         supertypes_meta.append({})
 
-        # Agglomerate into a single value for each column (if possible)
-        for col in table.columns:
-            vals = table[col].fillna("None").unique()
-            if len(vals) == 1:
-                supertypes_meta[-1][col] = vals[0]
-            else:
-                supertypes_meta[-1][col] = ", ".join(vals.astype(str))
+        table_mcns = mcns_meta[mcns_meta.supertype == t]
+
+        if table_mcns.empty:
+            print(f"  No matching MCNS supertype for {t}.", flush=True)
+        else:
+            # Agglomerate into a single value for each column (if possible)
+            for col in table_mcns.columns:
+                vals = table_mcns[col].fillna("None").unique()
+                if len(vals) == 1:
+                    supertypes_meta[-1][col] = vals[0]
+                else:
+                    supertypes_meta[-1][col] = ", ".join(vals.astype(str))
 
         # Add neuron counts
-        counts = table.somaSide.value_counts()
+        counts = table_mcns.somaSide.value_counts()
         if counts.empty:
-            counts = table.rootSide.value_counts()
+            counts = table_mcns.rootSide.value_counts()
 
         supertypes_meta[-1]["n_mcnsr"] = counts.get("R", 0)
         supertypes_meta[-1]["n_mcnsl"] = counts.get("L", 0)
 
         # Add type counts
-        type_counts = table.groupby("somaSide").type.nunique()
+        type_counts = table_mcns.groupby("somaSide").type.nunique()
         supertypes_meta[-1]["n_types_mcnsr"] = type_counts.get("R", 0)
         supertypes_meta[-1]["n_types_mcnsl"] = type_counts.get("L", 0)
 
         # Get a neuroglancer scene to populate
-        scene = prep_scene(table)
-        scene.layers[1]["segments"] = table["bodyId"].values
+        scene = prep_scene(table_mcns)
+        scene.layers[1]["segments"] = table_mcns["bodyId"].values
 
         # Grab the corresponding supertype in FlyWire
         table_fw = fw_meta[fw_meta.supertype == t]
 
         if table_fw.empty:
             print(f"  No matching FlyWire supertype for {t}.", flush=True)
-        else:
-            # Add counts
-            counts = table_fw.side.value_counts()
-            supertypes_meta[-1]["n_fwr"] = counts.get("right", 0)
-            supertypes_meta[-1]["n_fwl"] = counts.get("left", 0)
+        # Add info from FlyWire if we didn't have male-specific data
+        elif table_mcns.empty:
+            for col in table_fw.columns:
+                vals = table_fw[col].dropna().unique()
+                if len(vals) == 1:
+                    supertypes_meta[-1][col] = vals[0]
+                else:
+                    supertypes_meta[-1][col] = ", ".join(vals.astype(str))
 
-            # Add type counts
-            type_counts = table_fw.groupby("side").type.nunique()
-            supertypes_meta[-1]["n_types_fwr"] = type_counts.get("right", 0)
-            supertypes_meta[-1]["n_types_fwl"] = type_counts.get("left", 0)
+        # Add counts
+        counts = table_fw.side.value_counts()
+        supertypes_meta[-1]["n_fwr"] = counts.get("right", 0)
+        supertypes_meta[-1]["n_fwl"] = counts.get("left", 0)
 
-            scene.layers[2]["segments"] = table_fw["root_id"].values
-            scene.layers[2]["segmentDefaultColor"] = "#e511d0"
+        # Add type counts
+        type_counts = table_fw.groupby("side").type.nunique()
+        supertypes_meta[-1]["n_types_fwr"] = type_counts.get("right", 0)
+        supertypes_meta[-1]["n_types_fwl"] = type_counts.get("left", 0)
+
+        scene.layers[2]["segments"] = table_fw["root_id"].values
+        scene.layers[2]["segmentDefaultColor"] = "#e511d0"
 
         supertypes_meta[-1]["url"] = scene.url
 
@@ -642,20 +732,88 @@ def make_hemilineage_pages(mcns_meta, fw_meta):
     print("Done.", flush=True)
 
 
-def generate_thumbnail(type, mcns_meta, fw_meta):
+def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: Path):
     """Generate a thumbnail image for the given neuron type.
 
     Parameters
     ----------
-    type :      str
-                The type of neuron to generate the thumbnail for.
     mcns_meta : pd.DataFrame
-                The meta data for the MCNS neurons.
-    fw_meta :   pd.DataFrame
-                The  meta data for the FlyWire neurons.
+                Meta data of male CNS neurons to include in the thumbnail.
+    fw_meta :   iterable | None
+                Meta data of FlyWire neurons to include in the thumbnail.
+    outfile :   Path
+                Path to write the file to.
 
     """
-    pass
+    print(f"  Generating thumbnail {outfile.name}...", flush=True)
+    global MESH_BRAIN, MESH_VNC, FLYWIRE_CLOUDVOL, OC_VIEWER
+    # Load the mesh if it is not already loaded
+    if MESH_BRAIN is None:
+        vol = cv.CloudVolume(
+            "gs://flyem-cns-roi-7c971aa681da83f9a074a1f0e8ef60f4/fullbrain-major-shells/",
+            use_https=True,
+            progress=False,
+        )
+        MESH_BRAIN = navis.Volume(
+            vol.mesh.get([1, 2, 3]), name="BRAIN"
+        )  # CB + optic lobes
+
+    if MESH_VNC is None:
+        vol = cv.CloudVolume(
+            "precomputed://gs://flyem-cns-roi-7c971aa681da83f9a074a1f0e8ef60f4/vnc-neuropil-shell",
+            use_https=True,
+            progress=False,
+        )
+        MESH_VNC = navis.Volume(vol.mesh.get([1]), name="VNC")
+
+    if not OC_VIEWER:
+        OC_VIEWER = oc.Viewer(offscreen=True)
+
+    # Get FlyWire meshes
+    fw_meshes = navis.NeuronList([])
+    if not fw_meta.empty:
+        fw_meshes = navis.read_precomputed(
+            [
+                f"{FLYWIRE_SOURCE.replace('precomputed://', '')}/{id}"
+                for id in fw_meta["root_id"]
+            ],
+            datatype="mesh",
+            info=False,
+            progress=False,
+        )
+
+    # Get MCNS meshes
+    mcns_meshes = navis.NeuronList([])
+    if not mcns_meta.empty:
+        # Read precomputed meshes from DVID
+        base_url = f"{DVID_SERVER}/api/node/{DVID_NODE}/segmentation_meshes/key"
+        mcns_meshes = navis.read_precomputed(
+            [f"{base_url}/{id}.ngmesh" for id in mcns_meta["bodyId"]],
+            datatype="mesh",
+            info=False,
+            progress=False,
+        )
+
+    # Plot
+    OC_VIEWER.add_mesh(MESH_BRAIN, color=(0.8, 0.8, 0.8), alpha=0.1)
+    OC_VIEWER.add_neurons(fw_meshes, color="#e511d0")
+    OC_VIEWER.add_neurons(mcns_meshes, color="#00e9e7")
+    OC_VIEWER.set_view(
+        {
+            "position": np.array([387225.3840714, 229749.96777565, 95873.17475057]),
+            "rotation": np.array([1.0, 0.0, 0.0, 0.0]),
+            "scale": np.array([1.0, 1.0, 1.0]),
+            "reference_up": np.array([0.0, -1.0, 0.0]),
+            "fov": 0.0,
+            "width": 480452.4541556888,
+            "height": 480452.4541556888,
+            "zoom": 1.0,
+            "maintain_aspect": True,
+            "depth_range": None,
+        }
+    )
+    OC_VIEWER.screenshot(str(outfile.resolve()), size=(600, 400))
+    OC_VIEWER.clear()
 
 
 def generate_graphs(

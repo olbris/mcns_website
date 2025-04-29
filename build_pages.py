@@ -76,7 +76,7 @@ if __name__ == "__main__":
         building.clear_build_directory()
 
     # Generate the supertype pages
-    if not args.skip_overview:
+    if not args.skip_supertypes:
         building.make_supertype_pages(mcns_meta, fw_meta)
 
     # Generate the hemilineage pages
@@ -84,4 +84,10 @@ if __name__ == "__main__":
         building.make_hemilineage_pages(mcns_meta, fw_meta)
 
     # Generate the dimorphism pages (overview and individual pages)
-    building.make_dimorphism_pages(mcns_meta, fw_meta, fw_edges, skip_graphs=args.skip_graphs)
+    building.make_dimorphism_pages(
+        mcns_meta,
+        fw_meta,
+        fw_edges,
+        skip_graphs=args.skip_graphs,
+        skip_thumbnails=args.skip_thumbnails,
+    )

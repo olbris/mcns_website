@@ -25,8 +25,8 @@ for scene in (NGL_BASE_SCENE, NGL_BASE_SCENE_VNC, NGL_BASE_SCENE_TOP):
 #####
 # URLs for the MCNS and FlyWire meta data
 #####
-FLYWIRE_SOURCE = NGL_BASE_SCENE.layers["female (FlyWire)"]["source"]
-MCNS_SOURCE = NGL_BASE_SCENE.layers["maleCNS"]["source"]["url"]
+FLYWIRE_SOURCE = NGL_BASE_SCENE.layers["female (FlyWire)"]["source"]  # precomputed layer
+MCNS_SOURCE = NGL_BASE_SCENE.layers["maleCNS"]["source"]["url"]  # DVID layer
 DVID_SERVER = "https://" + MCNS_SOURCE.replace("dvid://https://", "").split("/")[0]
 DVID_NODE = MCNS_SOURCE.replace("dvid://https://", "").split("/")[1]
 
