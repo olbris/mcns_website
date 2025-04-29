@@ -101,6 +101,7 @@ def make_dimorphism_pages(
                     record["type"],
                     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
                     fw_meta[fw_meta["mapping"] == record["mapping"]],
+                    mcns_meta,
                     fw_meta,
                     fw_edges,
                 )
@@ -114,9 +115,7 @@ def make_dimorphism_pages(
         )
         record["graph_file_mcns_rel"] = f"../../graphs/{record['type']}_mcns.html"
 
-        record["graph_file_fw"] = (
-            BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
-        )
+        record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
         record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
 
         # Render the template with the meta data
@@ -141,6 +140,7 @@ def make_dimorphism_pages(
                     record["type"],
                     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
                     pd.DataFrame(),
+                    mcns_meta,
                     fw_meta,
                     fw_edges,
                 )
@@ -176,6 +176,7 @@ def make_dimorphism_pages(
                     record["type"],
                     pd.DataFrame(),
                     fw_meta[fw_meta["mapping"] == record["mapping"]],
+                    mcns_meta,
                     fw_meta,
                     fw_edges,
                 )
@@ -184,9 +185,7 @@ def make_dimorphism_pages(
                     f"  Failed to generate graph for {record['type']}: {e}", flush=True
                 )
 
-        record["graph_file_fw"] = (
-            BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
-        )
+        record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
         record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
 
         # Render the template with the meta data
@@ -660,13 +659,19 @@ def generate_thumbnail(type, mcns_meta, fw_meta):
 
 
 def generate_graphs(
-    type_name, type_meta_mcns, type_meta_fw, fw_meta_full, fw_edges, N=5
-):
+    type_name: str,
+    type_meta_mcns: pd.DataFrame,
+    type_meta_fw: pd.DataFrame,
+    mcns_meta_full: pd.DataFrame,
+    fw_meta_full: pd.DataFrame,
+    fw_edges: pd.DataFrame,
+    N: int = 5,
+) -> None:
     """Generate D3 graphs for the given neurons.
 
     Parameters
     ----------
-    type :      str
+    type_name : str
                 The type of neuron to generate the graph for.
                 This is primarily used for the filename as
                 the graphs are generated from the meta data
@@ -675,16 +680,28 @@ def generate_graphs(
                 The meta data for the MCNS neurons to generate graphs for.
     type_meta_fw : pd.DataFrame
                 The meta data for the FlyWire neurons to generate graphs for.
+    mcns_meta_full : pd.DataFrame
+                The full meta data for MaleCNS. We need this to assign types
+                to synaptic partners.
     fw_meta_full : pd.DataFrame
-                The full meta data for FlyWire.
+                The full meta data for FlyWire. We need this to assign types
+                to synaptic partners.
     fw_edges :  pd.DataFrame
                 The edges for the FlyWire neurons. See
                 loading.py for the function that loads this data.
     N :         int
                 The number of top N in- and out-edges to keep.
 
+    Returns
+    -------
+    None
+                But will write the graphs to `GRAPH_DIR / f"{type_name}{_mcns/_fw}.html"`.
+
     """
-    print(f"Generating graphs for {type_name}...", flush=True)
+    print(f"  Generating graphs for {type_name}...", flush=True)
+
+    mcns_mapping = mcns_meta_full.set_index("bodyId").mapping.to_dict()
+    fw_mapping = fw_meta_full.set_index("root_id").mapping.to_dict()
 
     # We may need to drop duplicates here
     fw_meta_full = fw_meta_full.drop_duplicates("root_id")
@@ -694,14 +711,15 @@ def generate_graphs(
 
     # First up: graph for the MCNS neurons
     if not type_meta_mcns.empty:
-        # Fetch downstream partners
-        ann, down = neu.fetch_adjacencies(
-            sources=neu.NeuronCriteria(bodyId=type_meta_mcns["bodyId"].values),
-        )
+        # Fetch downstream partners (ignore userwarnings)
+        with warnings.catch_warnings(action="ignore"):
+            ann, down = neu.fetch_adjacencies(
+                sources=neu.NeuronCriteria(bodyId=type_meta_mcns["bodyId"].values),
+            )
 
         # Add type information
-        down["pre_type"] = down.bodyId_pre.map(ann.set_index("bodyId").type)
-        down["post_type"] = down.bodyId_post.map(ann.set_index("bodyId").type)
+        down["pre_type"] = down.bodyId_pre.map(mcns_mapping)
+        down["post_type"] = down.bodyId_post.map(mcns_mapping)
 
         # Group by pre- and post-synaptic types
         down = (
@@ -715,11 +733,12 @@ def generate_graphs(
         down = down[down.pre_type.notnull() & down.post_type.notnull()]
 
         # Same for upstream partners
-        ann, up = neu.fetch_adjacencies(
-            targets=neu.NeuronCriteria(bodyId=type_meta_mcns["bodyId"].values),
-        )
-        up["pre_type"] = up.bodyId_pre.map(ann.set_index("bodyId").type)
-        up["post_type"] = up.bodyId_post.map(ann.set_index("bodyId").type)
+        with warnings.catch_warnings(action="ignore"):
+            ann, up = neu.fetch_adjacencies(
+                targets=neu.NeuronCriteria(bodyId=type_meta_mcns["bodyId"].values),
+            )
+        up["pre_type"] = up.bodyId_pre.map(mcns_mapping)
+        up["post_type"] = up.bodyId_post.map(mcns_mapping)
         up = (
             up.groupby(["pre_type", "post_type"], as_index=False)
             .weight.sum()
@@ -749,14 +768,10 @@ def generate_graphs(
         ].copy()
 
         # Add type information
-        down["pre_type"] = down.pre_pt_root_id.map(
-            fw_meta_full.set_index("root_id").type
-        )
-        down["post_type"] = down.post_pt_root_id.map(
-            fw_meta_full.set_index("root_id").type
-        )
-        up["pre_type"] = up.pre_pt_root_id.map(fw_meta_full.set_index("root_id").type)
-        up["post_type"] = up.post_pt_root_id.map(fw_meta_full.set_index("root_id").type)
+        down["pre_type"] = down.pre_pt_root_id.map(fw_mapping)
+        down["post_type"] = down.post_pt_root_id.map(fw_mapping)
+        up["pre_type"] = up.pre_pt_root_id.map(fw_mapping)
+        up["post_type"] = up.post_pt_root_id.map(fw_mapping)
 
         # Group by pre- and post-synaptic types
         down = (
@@ -819,12 +834,12 @@ def edges2d3(edges, filepath, color=None):
 def clear_build_directory():
     """Clear the build directory. This will only remove files but not the directories themselves."""
     for dir in (
-            BUILD_DIR,
-            GRAPH_DIR,
-            SUMMARY_TYPES_DIR,
-            THUMBNAILS_DIR,
-            SUPERTYPE_DIR,
-            HEMILINEAGE_DIR,
+        BUILD_DIR,
+        GRAPH_DIR,
+        SUMMARY_TYPES_DIR,
+        THUMBNAILS_DIR,
+        SUPERTYPE_DIR,
+        HEMILINEAGE_DIR,
     ):
         # Remove all files in the directory
         for file in dir.glob("*"):
