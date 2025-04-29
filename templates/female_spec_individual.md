@@ -8,7 +8,7 @@ hide:
 <!-- this links the font-awesome stylesheet v4 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-# Dimorphic Cell Type "{{ meta.type }}" [:octicons-link-external-24:{ .small-icon }]( {{ meta.neuprint_url }} "View on NeuPrint"){target="_blank"}
+# Female-specific Cell Type "{{ meta.type }}"
 
 
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
@@ -26,7 +26,7 @@ hide:
             </div>
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Supertype: </div>
-                <div style="display: table-cell;"> <a href="../../supertypes/{{ meta.supertype }}">{{ meta.supertype }}</a> </div>
+                <div style="display: table-cell;"> <a href="../supertypes/{{ meta.supertype }}">{{ meta.supertype }}</a> </div>
             </div>
             <hr style="margin: 0;">
             <div style="display: table-row">
@@ -37,14 +37,7 @@ hide:
             {% if meta.hemibrainType != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Hemibrain Type: </div>
-                <div style="display: table-cell;"> {{ meta.hemibrainType }} </div>
-            </div>
-            <hr style="margin: 0;">
-            {% endif %}
-            {% if meta.mancType != "None" %}
-            <div style="display: table-row">
-                <div style="width: 50%; display: table-cell; font-weight: bold;"> MANC Type: </div>
-                <div style="display: table-cell;"> {{ meta.mancType }} </div>
+                <div style="display: table-cell;"> {{ meta.hemibrain_type }} </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
@@ -66,10 +59,6 @@ hide:
                 <div style="width: 50%; display: table-cell;"> <b>Counts</b> (left|right): </div>
             </div>
             <div style="display: table-row">
-                <div style="width: 50%; display: table-cell;">&nbsp &nbsp Male: </div>
-                <div style="display: table-cell;"> {{ meta.n_mcnsl }} | {{ meta.n_mcnsr }}</div>
-            </div>
-            <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;">&nbsp &nbsp Female: </div>
                 <div style="display: table-cell;"> {{ meta.n_fwl }} | {{ meta.n_fwr }}</div>
             </div>
@@ -82,14 +71,14 @@ hide:
             {% if meta.itoleeHl != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Ito & Lee): </div>
-                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.itoleeHl }}">{{ meta.itoleeHl }}</a> </div>
+                <div style="display: table-cell;"> <a href="../hemilineages/{{ meta.itoleeHl }}">{{ meta.ito_lee_hemilineage }}</a> </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
             {% if meta.trumanHl != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Truman): </div>
-                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
+                <div style="display: table-cell;"> <a href="../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
@@ -100,18 +89,7 @@ hide:
             </div>
             <hr style="margin: 0;">
             {% endif %}
-            {% if meta.mcnsSerial != "None" %}
-            <div style="display: table-row">
-                <div style="width: 50%; display: table-cell; font-weight: bold;"> MCNS Serial: </div>
-                <div style="display: table-cell;"> {{ meta.mcnsSerial }} </div>
-            </div>
-            <hr style="margin: 0;">
-            {% endif %}
         </div>
-        <!-- Links to neuPrint/Codex (note also that we're adding a spacer)  -->
-        <!-- <p style="margin-top:3cm;">
-            <a href="{{ meta.neuprint_url }}" target="_blank">See on neuPrint</a>
-        </p> -->
     </div>
     <!-- This is the container for the neuroglancer frame -->
     <div style="text-align: center; flex: .7; min-width: 300px;">
@@ -128,7 +106,7 @@ hide:
     <div style="position: relative; display: inline-block;">
         <button style="background-color: transparent; border: none; cursor: pointer; font-size: 16px; color: #0078D4;">&#x3F;</button>
         <div style="visibility: hidden; width: 200px; background-color: #f9f9f9; color: #333; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; transform: translateX(-50%); box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
-            The graphs below show the 5 strongest up- and downstream partners for {{ meta.type}}. Click on the link icons to view the full connectivity in neuPrint.
+            The graphs below show the 5 strongest up- and downstream partners for {{ meta.type}}.
             <div style="position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #f9f9f9 transparent transparent transparent;"></div>
         </div>
     </div>
@@ -146,10 +124,6 @@ hide:
 </script>
 
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px;">
-    <div style="flex: 1; min-width: 300px; text-align: center;">
-        <h4>MaleCNS<a href="{{ meta.neuprint_conn_url }}" target="_blank"> <i class="fa fa-external-link"></i></a></h4>
-        <embed type="text/html" src="{{ meta.graph_file_mcns_rel }}" width="100%" height="500px" style="border:none;"></embed>
-    </div>
     <div style="flex: 1; min-width: 300px; text-align: center;">
         <h4>female (FlyWire)</h4>
         <embed type="text/html" src="{{ meta.graph_file_fw_rel }}" width="100%" height="500px" style="border:none;"></embed>

@@ -13,6 +13,14 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 #####
 NGL_BASE_URL = "https://clio-ng.janelia.org/#!gs://flyem-user-links/short/2025-04-14.184028.199909.json"
 NGL_BASE_SCENE = ngl.Scene.from_url(NGL_BASE_URL)
+NGL_BASE_URL_VNC = "https://clio-ng.janelia.org/#!gs://flyem-user-links/short/2025-04-28.110026.374589.json"
+NGL_BASE_SCENE_VNC = ngl.Scene.from_url(NGL_BASE_URL_VNC)
+NGL_BASE_URL_TOP = "https://clio-ng.janelia.org/#!gs://flyem-user-links/short/2025-04-28.112442.425526.json"
+NGL_BASE_SCENE_TOP = ngl.Scene.from_url(NGL_BASE_URL_TOP)
+
+# Make backgrounds white
+for scene in (NGL_BASE_SCENE, NGL_BASE_SCENE_VNC, NGL_BASE_SCENE_TOP):
+    scene["projectionBackgroundColor"] = "#ffffff"
 
 #####
 # URLs for the MCNS and FlyWire meta data
@@ -54,8 +62,11 @@ TEMPLATE_DIR = REPO_BASE_PATH / "templates"
 
 # Directory for the generated HTML files
 BUILD_DIR = REPO_BASE_PATH / "docs/build"
+SUMMARY_TYPES_DIR = BUILD_DIR / "summary_types"
 THUMBNAILS_DIR = BUILD_DIR / "thumbnails"
 GRAPH_DIR = BUILD_DIR / "graphs"
+SUPERTYPE_DIR = BUILD_DIR / "supertypes"
+HEMILINEAGE_DIR = BUILD_DIR / "hemilineages"
 
 # Directory for the some cached data (use the --update-metadata flag to trigger a refresh)
 CACHE_DIR = REPO_BASE_PATH / ".cache"
@@ -64,10 +75,16 @@ FW_META_DATA_CACHE = CACHE_DIR / "fw_meta_data.feather"
 MAPPING_CACHE = CACHE_DIR / "mapping.json"
 
 # Make sure the directories exist
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
-GRAPH_DIR.mkdir(parents=True, exist_ok=True)
-THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
-BUILD_DIR.mkdir(parents=True, exist_ok=True)
+for dir in (
+    CACHE_DIR,
+    BUILD_DIR,
+    SUMMARY_TYPES_DIR,
+    THUMBNAILS_DIR,
+    GRAPH_DIR,
+    SUPERTYPE_DIR,
+    HEMILINEAGE_DIR,
+):
+    dir.mkdir(parents=True, exist_ok=True)
 
 #####
 # Set up the Jinja2 environment

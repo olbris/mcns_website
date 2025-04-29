@@ -32,7 +32,7 @@ def load_cache_meta_data(force_update=False):
     else:
         print("Loading MCNS meta data from neuPrint...", flush=True, end="")
         mcns_data, _ = neu.fetch_neurons(
-            neu.NeuronCriteria(status="Traced"), client=NEUPRINT_CLIENT
+            neu.NeuronCriteria(), client=NEUPRINT_CLIENT
         )
 
         # Try to convert object columns to strings - otherwise loading the data becomes obscenely slow

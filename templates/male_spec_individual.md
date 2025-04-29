@@ -8,7 +8,7 @@ hide:
 <!-- this links the font-awesome stylesheet v4 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-# Dimorphic Cell Type "{{ meta.type }}" [:octicons-link-external-24:{ .small-icon }]( {{ meta.neuprint_url }} "View on NeuPrint"){target="_blank"}
+# Male-specific Cell Type "{{ meta.type }}" [:octicons-link-external-24:{ .small-icon }]( {{ meta.neuprint_url }} "View on NeuPrint"){target="_blank"}
 
 
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
@@ -26,21 +26,9 @@ hide:
             </div>
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Supertype: </div>
-                <div style="display: table-cell;"> <a href="../../supertypes/{{ meta.supertype }}">{{ meta.supertype }}</a> </div>
+                <div style="display: table-cell;"> <a href="../supertypes/{{ meta.supertype }}">{{ meta.supertype }}</a> </div>
             </div>
             <hr style="margin: 0;">
-            <div style="display: table-row">
-                <div style="width: 50%; display: table-cell; font-weight: bold;"> FlyWire Type(s): </div>
-                <div style="display: table-cell;"> {{ meta.flywireType }} </div>
-            </div>
-            <hr style="margin: 0;">
-            {% if meta.hemibrainType != "None" %}
-            <div style="display: table-row">
-                <div style="width: 50%; display: table-cell; font-weight: bold;"> Hemibrain Type: </div>
-                <div style="display: table-cell;"> {{ meta.hemibrainType }} </div>
-            </div>
-            <hr style="margin: 0;">
-            {% endif %}
             {% if meta.mancType != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> MANC Type: </div>
@@ -70,11 +58,6 @@ hide:
                 <div style="display: table-cell;"> {{ meta.n_mcnsl }} | {{ meta.n_mcnsr }}</div>
             </div>
             <div style="display: table-row">
-                <div style="width: 50%; display: table-cell;">&nbsp &nbsp Female: </div>
-                <div style="display: table-cell;"> {{ meta.n_fwl }} | {{ meta.n_fwr }}</div>
-            </div>
-            <hr style="margin: 0;">
-            <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Consensus NT: </div>
                 <div style="display: table-cell;"> {{ meta.consensusNt }} </div>
             </div>
@@ -82,14 +65,14 @@ hide:
             {% if meta.itoleeHl != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Ito & Lee): </div>
-                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.itoleeHl }}">{{ meta.itoleeHl }}</a> </div>
+                <div style="display: table-cell;"> <a href="../hemilineages/{{ meta.itoleeHl }}">{{ meta.itoleeHl }}</a> </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
             {% if meta.trumanHl != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Truman): </div>
-                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
+                <div style="display: table-cell;"> <a href="../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
@@ -149,10 +132,6 @@ hide:
     <div style="flex: 1; min-width: 300px; text-align: center;">
         <h4>MaleCNS<a href="{{ meta.neuprint_conn_url }}" target="_blank"> <i class="fa fa-external-link"></i></a></h4>
         <embed type="text/html" src="{{ meta.graph_file_mcns_rel }}" width="100%" height="500px" style="border:none;"></embed>
-    </div>
-    <div style="flex: 1; min-width: 300px; text-align: center;">
-        <h4>female (FlyWire)</h4>
-        <embed type="text/html" src="{{ meta.graph_file_fw_rel }}" width="100%" height="500px" style="border:none;"></embed>
     </div>
 </div>
 

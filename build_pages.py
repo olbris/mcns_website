@@ -36,6 +36,21 @@ parser.add_argument(
     help="Skip the generation of individual cell type pages.",
 )
 parser.add_argument(
+    "--skip-graphs",
+    action="store_true",
+    help="Skip the generation of networks graphs.",
+)
+parser.add_argument(
+    "--skip-supertypes",
+    action="store_true",
+    help="Skip the generation of summary pages for supertypes.",
+)
+parser.add_argument(
+    "--skip-hemilineages",
+    action="store_true",
+    help="Skip the generation of summary pages for hemilineages.",
+)
+parser.add_argument(
     "--clear-build",
     action="store_true",
     help="Clear the build directory before generating pages.",
@@ -60,5 +75,13 @@ if __name__ == "__main__":
         # Clear the build directory
         building.clear_build_directory()
 
+    # Generate the supertype pages
+    if not args.skip_overview:
+        building.make_supertype_pages(mcns_meta, fw_meta)
+
+    # Generate the hemilineage pages
+    if not args.skip_hemilineages:
+        building.make_hemilineage_pages(mcns_meta, fw_meta)
+
     # Generate the dimorphism pages (overview and individual pages)
-    building.make_dimorphism_pages(mcns_meta, fw_meta, fw_edges)
+    building.make_dimorphism_pages(mcns_meta, fw_meta, fw_edges, skip_graphs=args.skip_graphs)
