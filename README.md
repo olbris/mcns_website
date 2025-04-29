@@ -1,7 +1,7 @@
 # Website to accompany the male CNS connectome
 
 > [!CAUTION]
-> This repository currently builds neuroglancer links using the MCNS DVID server as source. Making the repo or the website public as is risks leaking the server address.
+> This repository currently builds neuroglancer links using the MCNS DVID server as source. The URL is also visible in the workflow outputs. Making the repo or the website public as is risks leaking the server address.
 
 ## TODOs
 
@@ -22,21 +22,26 @@
 
 ## Build
 
-Currently, the website has to be built locally using `mkdocs` and `jinja2` templates. The results are then pushed to the Github repository
-where they are deployed to GitHub pages. In the future, we should consider setting up a CI/CD pipeline to automate this process and to
-avoid pushing large files to the repository.
+### Local
 
-To build the website, run:
+The website is build using `mkdocs` and `jinja2` templates. Dependencies are managed using `uv`.
+
+To build the website locally, run:
 
 ```bash
 uv run build_pages.py
 uv run mkdocs build
 ```
 
-## Development
+To serve the website locally, run:
 
 ```bash
 uv run mkdocs serve
 ```
 
+### Github
+
+On Github the website is built and deployed using a Github actions
+workflow that is triggered on every push to the `main` branch. It
+can also be triggered manually using the workflow dispatch feature.
 
