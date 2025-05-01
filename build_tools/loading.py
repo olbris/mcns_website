@@ -86,10 +86,12 @@ def load_cache_meta_data(force_update=False):
             flush=True,
         )
     else:
-        print("Loading and compiling FlyWire ROI info from Zenodo...", flush=True, end="")
+        print(
+            "Loading and compiling FlyWire ROI info from Zenodo...", flush=True, end=""
+        )
         # Load presynapses (17Mb)
         r = requests.get(
-            "https://zenodo.org/records/10676866/files/per_neuron_neuropil_count_pre_783.feather?download=1"
+            "https://flyem.mrc-lmb.cam.ac.uk/flyconnectome/flywire_connectivity/per_neuron_neuropil_filtered_count_pre_783.feather"
         )
         r.raise_for_status()
         pre = pd.read_feather(BytesIO(r.content)).rename(
@@ -97,7 +99,7 @@ def load_cache_meta_data(force_update=False):
         )
         # Load postsynapses (233Mb)
         r = requests.get(
-            "https://zenodo.org/records/10676866/files/per_neuron_neuropil_count_post_783.feather?download=1"
+            "https://flyem.mrc-lmb.cam.ac.uk/flyconnectome/flywire_connectivity/per_neuron_neuropil_filtered_count_post_783.feather"
         )
         r.raise_for_status()
         post = pd.read_feather(BytesIO(r.content)).rename(
@@ -113,8 +115,16 @@ def load_cache_meta_data(force_update=False):
         fw_roi_info.columns = ["root_id", "roi", "pre", "post"]
 
         # Rename neuropils to align to MaleCNS
-        fw_roi_info.loc[fw_roi_info.roi.str.endswith("_L", na=False), "roi"] = fw_roi_info.loc[fw_roi_info.roi.str.endswith("_L", na=False), "roi"].str.replace("_L", "(L)")
-        fw_roi_info.loc[fw_roi_info.roi.str.endswith("_R", na=False), "roi"] = fw_roi_info.loc[fw_roi_info.roi.str.endswith("_R", na=False), "roi"].str.replace("_R", "(R)")
+        fw_roi_info.loc[fw_roi_info.roi.str.endswith("_L", na=False), "roi"] = (
+            fw_roi_info.loc[
+                fw_roi_info.roi.str.endswith("_L", na=False), "roi"
+            ].str.replace("_L", "(L)")
+        )
+        fw_roi_info.loc[fw_roi_info.roi.str.endswith("_R", na=False), "roi"] = (
+            fw_roi_info.loc[
+                fw_roi_info.roi.str.endswith("_R", na=False), "roi"
+            ].str.replace("_R", "(R)")
+        )
 
         # Save to cache
         fw_roi_info.to_feather(FW_ROI_INFO_CACHE)
