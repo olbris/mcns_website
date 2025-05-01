@@ -98,16 +98,15 @@ wheels = [
 
 [[package]]
 name = "blessed"
-version = "1.20.0"
+version = "1.21.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinxed", marker = "sys_platform == 'win32'" },
-    { name = "six" },
     { name = "wcwidth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/25/ae/92e9968ad23205389ec6bd82e2d4fca3817f1cdef34e10aa8d529ef8b1d7/blessed-1.20.0.tar.gz", hash = "sha256:2cdd67f8746e048f00df47a2880f4d6acbcdb399031b604e34ba8f71d5787680", size = 6655612 }
+sdist = { url = "https://files.pythonhosted.org/packages/0c/5e/3cada2f7514ee2a76bb8168c71f9b65d056840ebb711962e1ec08eeaa7b0/blessed-1.21.0.tar.gz", hash = "sha256:ece8bbc4758ab9176452f4e3a719d70088eb5739798cd5582c9e05f2a28337ec", size = 6660011 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/76/98/584f211c3a4bb38f2871fa937ee0cc83c130de50c955d6c7e2334dbf4acb/blessed-1.20.0-py2.py3-none-any.whl", hash = "sha256:0c542922586a265e699188e52d5f5ac5ec0dd517e5a1041d90d2bbf23f906058", size = 58372 },
+    { url = "https://files.pythonhosted.org/packages/ea/8e/0a37e44878fd76fac9eff5355a1bf760701f53cb5c38cdcd59a8fd9ab2a2/blessed-1.21.0-py2.py3-none-any.whl", hash = "sha256:f831e847396f5a2eac6c106f4dfadedf46c4f804733574b15fe86d2ed45a9588", size = 84727 },
 ]
 
 [[package]]
@@ -220,7 +219,7 @@ wheels = [
 
 [[package]]
 name = "caveclient"
-version = "7.7.1"
+version = "7.7.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
@@ -235,9 +234,9 @@ dependencies = [
     { name = "requests" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6a/04/fefcf457894c95e148dff6a0c6d400dc45e250f381e6caa9659687aced60/caveclient-7.7.1.tar.gz", hash = "sha256:154ba31d6373ff403ea7d09898ae571d8a3c0ac3339d8605760c32623d7a9f22", size = 3225776 }
+sdist = { url = "https://files.pythonhosted.org/packages/60/0b/db9ae20213f190dce1a582e22483881595284b2934ab6721946f82a52448/caveclient-7.7.4.tar.gz", hash = "sha256:142934375c4363c90f1210c74129bcba8beaed02cdf875957afab3762cb17bf8", size = 3226437 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b4/30/339e4dde2103751a9e233ad49b45ccf162c32aa62b0a9b8a2359159925eb/caveclient-7.7.1-py3-none-any.whl", hash = "sha256:48eb04af1211d08440a81ee495f3b9c470c9d442c25b31e55a5e73257a79d26e", size = 87288 },
+    { url = "https://files.pythonhosted.org/packages/05/59/e79ca7baf025024d9136471a55000a78b9d75f1c22358674977785128886/caveclient-7.7.4-py3-none-any.whl", hash = "sha256:314efdde03a2bcf46e253e620daecb65b9df36eb55baf7292d181e79bd25d68c", size = 87727 },
 ]
 
 [[package]]
@@ -366,7 +365,7 @@ wheels = [
 [[package]]
 name = "clio-py"
 version = "0.1.0"
-source = { git = "https://github.com/schlegelp/clio-py?rev=main#c9cbb09a5761a91f7989e7293322a7da3f787394" }
+source = { git = "https://github.com/schlegelp/clio-py?rev=main#458183f8c57bf831d1426888778aa98d09b3c6af" }
 dependencies = [
     { name = "dvidtools" },
     { name = "numpy" },
@@ -465,7 +464,7 @@ wheels = [
 [[package]]
 name = "cocoa"
 version = "0.1.1"
-source = { git = "https://github.com/flyconnectome/cocoa?rev=models#762a1c769abe564debafbfd5bceac19d6f674090" }
+source = { git = "https://github.com/flyconnectome/cocoa?rev=models#d9a4b83e258ce03ba4d410f1693ace95bd14146d" }
 dependencies = [
     { name = "clio-py" },
     { name = "dash" },
@@ -697,7 +696,7 @@ wheels = [
 
 [[package]]
 name = "dash"
-version = "3.0.3"
+version = "3.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flask" },
@@ -710,9 +709,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "werkzeug" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/14/f6/c337e0f019a6faaeb2cf42ae846f4736136e62de5522b02ae1acad1bb26f/dash-3.0.3.tar.gz", hash = "sha256:86d3038ae9f09e1f246937afbab5451c9db5a3832911c325d2e1f0bcefe2b7c9", size = 7603520 }
+sdist = { url = "https://files.pythonhosted.org/packages/88/6d/90f113317d41266e20190185cf1b5121efbab79ff79b2ecdf8316a91be40/dash-3.0.4.tar.gz", hash = "sha256:4f9e62e9d8c5cd1b42dc6d6dcf211fe9498195f73ef0edb62a26e2a1b952a368", size = 7592060 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e8/62/4f7ed64d193fe8a3d13abe03694bd752ca3c34fce8b025af794585f3cc2a/dash-3.0.3-py3-none-any.whl", hash = "sha256:9c6577e056971590c002c07fd26376d3d501bddb39804466e401876fb1e043ac", size = 7952319 },
+    { url = "https://files.pythonhosted.org/packages/0d/20/2e7ab37ea2ef1f8b2592a2615c8b3fb041ad51f32101061d8bc6465b8b40/dash-3.0.4-py3-none-any.whl", hash = "sha256:177f8c3d1fa45555b18f2f670808eba7803c72a6b1cd6fd172fd538aca18eb1d", size = 7935680 },
 ]
 
 [[package]]
@@ -1446,7 +1445,7 @@ wheels = [
 
 [[package]]
 name = "ipython"
-version = "9.1.0"
+version = "9.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -1461,9 +1460,9 @@ dependencies = [
     { name = "traitlets" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/9a/6b8984bedc990f3a4aa40ba8436dea27e23d26a64527de7c2e5e12e76841/ipython-9.1.0.tar.gz", hash = "sha256:a47e13a5e05e02f3b8e1e7a0f9db372199fe8c3763532fe7a1e0379e4e135f16", size = 4373688 }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/02/63a84444a7409b3c0acd1de9ffe524660e0e5d82ee473e78b45e5bfb64a4/ipython-9.2.0.tar.gz", hash = "sha256:62a9373dbc12f28f9feaf4700d052195bf89806279fc8ca11f3f54017d04751b", size = 4424394 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/9d/4ff2adf55d1b6e3777b0303fdbe5b723f76e46cba4a53a32fe82260d2077/ipython-9.1.0-py3-none-any.whl", hash = "sha256:2df07257ec2f84a6b346b8d83100bcf8fa501c6e01ab75cd3799b0bb253b3d2a", size = 604053 },
+    { url = "https://files.pythonhosted.org/packages/78/ce/5e897ee51b7d26ab4e47e5105e7368d40ce6cfae2367acdf3165396d50be/ipython-9.2.0-py3-none-any.whl", hash = "sha256:fef5e33c4a1ae0759e0bba5917c9db4eb8c53fee917b6a526bd973e1ca5159f6", size = 604277 },
 ]
 
 [[package]]
@@ -2049,11 +2048,11 @@ wheels = [
 
 [[package]]
 name = "narwhals"
-version = "1.36.0"
+version = "1.37.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/65/92/503f99e2244a271aacd6c2588e0af1b59232292b217708748cdb30214dc3/narwhals-1.36.0.tar.gz", hash = "sha256:7cd860e7e066609bd8a042bb5b8e4193275532114448210a91cbd5c622b6e5eb", size = 270385 }
+sdist = { url = "https://files.pythonhosted.org/packages/13/e1/a602073ef14da8f065b08c178861cf782f08a3676492042566ae3ccc5671/narwhals-1.37.1.tar.gz", hash = "sha256:1eb8f17ff00e6c471d5afb704e9068f41657234eb73bde2ee66ad975a170015b", size = 272029 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/42/bf/fbcbd9f8676e06ed43d644a4ddbf31478a44056487578ce67f191da430cb/narwhals-1.36.0-py3-none-any.whl", hash = "sha256:e3c50dd1d769bc145f57ae17c1f0f0da6c3d397d62cdd0bb167e9b618e95c9d6", size = 331018 },
+    { url = "https://files.pythonhosted.org/packages/b1/e3/79d95ed89f46b134dd801b54375e362c505303bd739a6737efc14d0de835/narwhals-1.37.1-py3-none-any.whl", hash = "sha256:6f358a23b7351897d6efb45496dc0528918ce4ca6c8f9631594885cd873576a7", size = 332366 },
 ]
 
 [[package]]

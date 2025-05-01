@@ -62,8 +62,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Load meta data
-    mcns_meta, fw_meta = loading.load_cache_meta_data(force_update=args.update_metadata)
-    mcns_meta["type"] = mcns_meta.type.fillna(mcns_meta.flywireType).fillna("unknown")
+    mcns_meta, fw_meta, mcns_roi_info, fw_roi_info = loading.load_cache_meta_data(
+        force_update=args.update_metadata
+    )
+    # mcns_meta["type"] = mcns_meta.type.fillna(mcns_meta.flywireType).fillna("unknown")
     mappings = loading.load_cache_mapping(force_update=args.update_metadata)
     fw_edges = loading.load_cache_fw_edges(force_update=args.update_metadata)
 
@@ -77,7 +79,9 @@ if __name__ == "__main__":
 
     # Generate the supertype pages
     if not args.skip_supertypes:
-        building.make_supertype_pages(mcns_meta, fw_meta)
+        building.make_supertype_pages(
+            mcns_meta, fw_meta, skip_thumbnails=args.skip_thumbnails
+        )
 
     # Generate the hemilineage pages
     if not args.skip_hemilineages:
@@ -88,6 +92,8 @@ if __name__ == "__main__":
         mcns_meta,
         fw_meta,
         fw_edges,
+        mcns_roi_info,
+        fw_roi_info,
         skip_graphs=args.skip_graphs,
         skip_thumbnails=args.skip_thumbnails,
     )

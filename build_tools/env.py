@@ -71,7 +71,9 @@ HEMILINEAGE_DIR = BUILD_DIR / "hemilineages"
 # Directory for the some cached data (use the --update-metadata flag to trigger a refresh)
 CACHE_DIR = REPO_BASE_PATH / ".cache"
 MCNS_META_DATA_CACHE = CACHE_DIR / "mcns_meta_data.feather"
+MCNS_ROI_INFO_CACHE = CACHE_DIR / "mcns_roi_info.feather"
 FW_META_DATA_CACHE = CACHE_DIR / "fw_meta_data.feather"
+FW_ROI_INFO_CACHE = CACHE_DIR / "fw_roi_info.feather"
 MAPPING_CACHE = CACHE_DIR / "mapping.json"
 
 # Make sure the directories exist

@@ -1,8 +1,11 @@
 ---
-title: {{ meta.type }}
+title: {{ meta.hemilineage }}
 hide:
   - toc
   - navigation
+  - tags
+tags:
+   - {{ meta.hemilineage }}
 ---
 
 <!-- this links the font-awesome stylesheet v4 -->
@@ -20,7 +23,7 @@ hide:
                 <div style="display: table-cell;"> {{ meta.superclass }} </div>
             </div>
             <hr style="margin: 0;">
-            {% if meta.synonyms != "None" %}
+            {% if meta.synonyms %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Synonyms: </div>
                 <div style="display: table-cell;"> {{ meta.synonyms }} </div>
@@ -56,21 +59,27 @@ hide:
                 <div style="display: table-cell;"> {{ meta.consensusNt }} </div>
             </div>
             <hr style="margin: 0;">
-            {% if meta.itoleeHl != "None" %}
+            {% if meta.itoleeHl %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;">Ito & Lee nomenclature: </div>
                 <div style="display: table-cell;"> {{ meta.itoleeHl }} </div>
             </div>
             <hr style="margin: 0;">
+            {% elif meta.ito_lee_hemilineage %}
+            <div style="display: table-row">
+                <div style="width: 50%; display: table-cell; font-weight: bold;">Ito & Lee nomenclature: </div>
+                <div style="display: table-cell;"> {{ meta.ito_lee_hemilineage }} </div>
+            </div>
+            <hr style="margin: 0;">
             {% endif %}
-            {% if meta.trumanHl != "None" %}
+            {% if meta.trumanHl %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;">Truman nomenclature: </div>
                 <div style="display: table-cell;"> {{ meta.trumanHl }} </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
-            {% if meta.somaNeuromere != "None" %}
+            {% if meta.somaNeuromere %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Soma Neuromere(s): </div>
                 <div style="display: table-cell;"> {{ meta.somaNeuromere }} </div>

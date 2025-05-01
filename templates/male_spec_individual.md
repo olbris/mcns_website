@@ -3,6 +3,12 @@ title: {{ meta.type }}
 hide:
   - toc
   - navigation
+  - tags
+tags:
+   - {{ meta.type }}
+   - {{ meta.mapping }}
+   - {{ meta.hemibrainType }}
+   - {{ meta.mancType }}
 ---
 
 <!-- this links the font-awesome stylesheet v4 -->
@@ -22,34 +28,57 @@ hide:
             <hr style="margin: 0;">
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Cell Class: </div>
-                <div style="display: table-cell;"> {{ meta.class }} </div>
+                <div style="display: table-cell;"> {{ meta.class if meta.class != "N/A" else "None" }} </div>
             </div>
+            <hr style="margin: 0;">
+            {% if meta.itoleeHl != "N/A" %}
+            <div style="display: table-row">
+                <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Ito & Lee): </div>
+                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.itoleeHl }}">{{ meta.itoleeHl }}</a> </div>
+            </div>
+            <hr style="margin: 0;">
+            {% endif %}
+            {% if meta.trumanHl != "N/A" %}
+            <div style="display: table-row">
+                <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Truman): </div>
+                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
+            </div>
+            <hr style="margin: 0;">
+            {% endif %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Supertype: </div>
                 <div style="display: table-cell;"> <a href="../../supertypes/{{ meta.supertype }}">{{ meta.supertype }}</a> </div>
             </div>
             <hr style="margin: 0;">
-            {% if meta.mancType != "None" %}
+            <div style="display: table-row">
+                <div style="width: 50%; display: table-cell; font-weight: bold;"> Across-brain Mapping
+                    <div style="position: relative; display: inline-block;">
+                        <button style="background-color: transparent; border: none; cursor: pointer; font-size: 16px; color: #0078D4;"><sup>&#x3F;</sup></button>
+                        <div style="visibility: hidden; width: 200px; background-color: #f9f9f9; color: #333; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; transform: translateX(-50%); box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); font-weight: normal;">
+                            A label mapping this groups of neurons between the male CNS and the FlyWire connectome, or between male CNS and the MANC dataset.
+                            <div style="position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #f9f9f9 transparent transparent transparent;"></div>
+                        </div>
+                    </div>
+                    :
+                </div>
+                <div style="display: table-cell;"> {{ meta.mapping }} </div>
+            </div>
+            <hr style="margin: 0;">
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> MANC Type: </div>
                 <div style="display: table-cell;"> {{ meta.mancType }} </div>
             </div>
             <hr style="margin: 0;">
-            {% endif %}
-            {% if meta.synonyms != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Synonyms: </div>
                 <div style="display: table-cell;"> {{ meta.synonyms }} </div>
             </div>
             <hr style="margin: 0;">
-            {% endif %}
-            {% if meta.matchingNotes != "None" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Matching Notes: </div>
                 <div style="display: table-cell;"> {{ meta.matchingNotes }} </div>
             </div>
             <hr style="margin: 0;">
-            {% endif %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Counts</b> (left|right): </div>
             </div>
@@ -58,37 +87,34 @@ hide:
                 <div style="display: table-cell;"> {{ meta.n_mcnsl }} | {{ meta.n_mcnsr }}</div>
             </div>
             <div style="display: table-row">
-                <div style="width: 50%; display: table-cell; font-weight: bold;"> Consensus NT: </div>
-                <div style="display: table-cell;"> {{ meta.consensusNt }} </div>
+                <div style="width: 50%; display: table-cell;">&nbsp &nbsp Female: </div>
+                <div style="display: table-cell;"> N/A | N/A </div>
             </div>
             <hr style="margin: 0;">
-            {% if meta.itoleeHl != "None" %}
             <div style="display: table-row">
-                <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Ito & Lee): </div>
-                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.itoleeHl }}">{{ meta.itoleeHl }}</a> </div>
+                <div style="width: 50%; display: table-cell;"> <b>Neurotransmitter</b>(s): </div>
             </div>
-            <hr style="margin: 0;">
-            {% endif %}
-            {% if meta.trumanHl != "None" %}
             <div style="display: table-row">
-                <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Truman): </div>
-                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
+                <div style="width: 50%; display: table-cell;">&nbsp &nbsp Male: </div>
+                <div style="display: table-cell;"> {{ meta.consensusNt }}</div>
+            </div>
+            <div style="display: table-row">
+                <div style="width: 50%; display: table-cell;">&nbsp &nbsp Female: </div>
+                <div style="display: table-cell;"> N/A </div>
             </div>
             <hr style="margin: 0;">
-            {% endif %}
-            {% if meta.somaNeuromere != "None" %}
+            {% if meta.somaNeuromere != "N/A" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Soma Neuromere: </div>
                 <div style="display: table-cell;"> {{ meta.somaNeuromere }} </div>
             </div>
-            <hr style="margin: 0;">
             {% endif %}
-            {% if meta.mcnsSerial != "None" %}
+            {% if meta.mcnsSerial != "N/A" %}
+            <hr style="margin: 0;">
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> MCNS Serial: </div>
                 <div style="display: table-cell;"> {{ meta.mcnsSerial }} </div>
             </div>
-            <hr style="margin: 0;">
             {% endif %}
         </div>
         <!-- Links to neuPrint/Codex (note also that we're adding a spacer)  -->
@@ -117,6 +143,7 @@ hide:
     </div>
 </div>
 
+<!-- script for tooltips -->
 <script>
     document.querySelectorAll('button').forEach(button => {
         button.addEventListener('mouseover', function() {

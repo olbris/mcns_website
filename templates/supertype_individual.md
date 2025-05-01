@@ -1,8 +1,9 @@
 ---
-title: {{ meta.type }}
+title: {{ meta.supertype }}
 hide:
   - toc
   - navigation
+  - tags
 ---
 
 <!-- this links the font-awesome stylesheet v4 -->
@@ -20,7 +21,7 @@ hide:
                 <div style="display: table-cell;"> {{ meta.superclass }} </div>
             </div>
             <hr style="margin: 0;">
-            {% if meta.synonyms != "None" %}
+            {% if meta.synonyms %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Synonyms: </div>
                 <div style="display: table-cell;"> {{ meta.synonyms }} </div>
@@ -56,21 +57,27 @@ hide:
                 <div style="display: table-cell;"> {{ meta.consensusNt }} </div>
             </div>
             <hr style="margin: 0;">
-            {% if meta.itoleeHl != "None" %}
+            {% if meta.itoleeHl %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Ito & Lee): </div>
-                <div style="display: table-cell;"> <a href="../hemilineages/{{ meta.itoleeHl }}">{{ meta.itoleeHl }}</a> </div>
+                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.itoleeHl }}">{{ meta.itoleeHl }}</a> </div>
+            </div>
+            <hr style="margin: 0;">
+            {% elif meta.ito_lee_hemilineage %}
+            <div style="display: table-row">
+                <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Ito & Lee): </div>
+                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.ito_lee_hemilineage }}">{{ meta.ito_lee_hemilineage }}</a> </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
-            {% if meta.trumanHl != "None" %}
+            {% if meta.trumanHl %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Truman): </div>
-                <div style="display: table-cell;"> <a href="../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
+                <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
-            {% if meta.somaNeuromere != "None" %}
+            {% if meta.somaNeuromere %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Soma Neuromere: </div>
                 <div style="display: table-cell;"> {{ meta.somaNeuromere }} </div>

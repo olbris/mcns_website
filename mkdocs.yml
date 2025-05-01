@@ -3,6 +3,10 @@ site_description: Project website for the MaleCNS connectome
 site_url: https://mydomain.org/mysite
 copyright: Copyright &copy; 2025 Janelia Research Campus
 
+plugins:
+  - tags
+  - search
+
 extra:
   generator: false
   social:

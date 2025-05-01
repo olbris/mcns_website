@@ -1,5 +1,5 @@
 """
-Functions for building the various bits and pieces of the website
+Functions for building the various bits and pieces of the website.
 """
 
 import navis
@@ -34,6 +34,7 @@ from .env import (
     FLYWIRE_SOURCE,
     DVID_SERVER,
     DVID_NODE,
+    NEUPRINT_CLIENT,
 )
 
 # Silence the d3graph logger
@@ -52,6 +53,8 @@ def make_dimorphism_pages(
     mcns_meta: pd.DataFrame,
     fw_meta: pd.DataFrame,
     fw_edges: pd.DataFrame,
+    mcns_roi_info: pd.DataFrame,
+    fw_roi_info: pd.DataFrame,
     skip_graphs: bool = False,
     skip_thumbnails: bool = False,
 ) -> None:
@@ -60,11 +63,16 @@ def make_dimorphism_pages(
     Parameters
     ----------
     mcns_meta : pd.DataFrame
-                The meta data for the neurons as returned from neuPrint.
+                The meta data for MaleCNS neurons as returned from neuPrint.
     fw_meta :   pd.DataFrame
-                The meta data for the neurons as returned from FlyTable.
+                The meta data for FlyWire neurons as returned from FlyTable.
     fw_edges :  pd.DataFrame
                 Edge list for FlyWire neurons.
+    mcns_roi_info : pd.DataFrame
+                The ROI info for MaleCNS neurons as returned from neuPrint.
+    fw_roi_info : pd.DataFrame
+                The ROI info for FlyWire neurons. Compiled from Zenodo data dump
+                - see loading.py for details.
     skip_graphs : bool
                 If True, skip generating the graphs for the neurons.
     skip_thumbnails : bool
@@ -88,6 +96,16 @@ def make_dimorphism_pages(
         dimorphic_meta, male_meta, female_meta, mcns_meta, fw_meta
     )
 
+    # Group types by supertypes
+    by_supertype = group_by_supertype(
+        dimorphic_meta, male_meta, female_meta, mcns_meta, fw_meta
+    )
+
+    # Group types by brain region
+    by_region = group_by_region(
+        dimorphic_meta, male_meta, female_meta, mcns_roi_info, fw_roi_info
+    )
+
     print("Generating overview page...", flush=True)
 
     # Load the template for the overview page
@@ -100,6 +118,8 @@ def make_dimorphism_pages(
         female_types=female_meta,
         summary_types_dir=SUMMARY_TYPES_DIR.name,
         hemilineages=by_hemilineage,
+        supertypes=by_supertype,
+        regions=by_region,
     )
 
     #  Write the rendered HTML to a file
@@ -191,6 +211,20 @@ def make_dimorphism_pages(
         )
         record["graph_file_mcns_rel"] = f"../../graphs/{record['type']}_mcns.html"
 
+        if not skip_thumbnails:
+            # Generate the thumbnail
+            try:
+                generate_thumbnail(
+                    mcns_meta[mcns_meta["mapping"] == record["mapping"]],
+                    fw_meta[fw_meta["mapping"] == record["mapping"]],
+                    THUMBNAILS_DIR / f"{record['type_file']}.png",
+                )
+            except Exception as e:
+                print(
+                    f"  Failed to generate thumbnail for {record['type']}: {e}",
+                    flush=True,
+                )
+
         # Render the template with the meta data
         rendered = individual_template.render(meta=record)
 
@@ -224,6 +258,20 @@ def make_dimorphism_pages(
 
         record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
         record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
+
+        if not skip_thumbnails:
+            # Generate the thumbnail
+            try:
+                generate_thumbnail(
+                    mcns_meta[mcns_meta["mapping"] == record["mapping"]],
+                    fw_meta[fw_meta["mapping"] == record["mapping"]],
+                    THUMBNAILS_DIR / f"{record['type_file']}.png",
+                )
+            except Exception as e:
+                print(
+                    f"  Failed to generate thumbnail for {record['type']}: {e}",
+                    flush=True,
+                )
 
         # Render the template with the meta data
         rendered = individual_template.render(meta=record)
@@ -260,6 +308,7 @@ def extract_type_data(mcns_meta, fw_meta):
     ###
 
     # Filter to dimorphic types
+    # (i.e. "sexually dimorphic" and "potentially sexually dimorphic")
     dimorphic_types = mcns_meta[
         mcns_meta.dimorphism.str.contains("dimorphic", na=False)
     ].drop(columns=["roiInfo", "inputRois", "outputRois"])
@@ -277,9 +326,12 @@ def extract_type_data(mcns_meta, fw_meta):
             if len(vals) == 1:
                 dimorphic_meta[-1][col] = vals[0]
             elif len(vals) == 0:
-                dimorphic_meta[-1][col] = "None"
+                dimorphic_meta[-1][col] = "N/A"
             else:
                 dimorphic_meta[-1][col] = ", ".join(vals.astype(str))
+
+        # What type of dimorphism is this?
+        dimorphic_meta[-1]["dimorphism_type"] = "dimorphic"
 
         # Add counts
         counts = table.somaSide.value_counts()
@@ -306,6 +358,19 @@ def extract_type_data(mcns_meta, fw_meta):
         if table_fw.empty:
             print(f"  No matching FlyWire type for {t}.", flush=True)
         else:
+            # Agglomerate into a single value for each column (if possible)
+            for col in table_fw.columns:
+                # Skip columns that are already in the MCNS meta data
+                if col in mcns_meta.columns:
+                    continue
+                vals = table_fw[col].dropna().unique()
+                if len(vals) == 1:
+                    dimorphic_meta[-1][col] = vals[0]
+                elif len(vals) == 0:
+                    dimorphic_meta[-1][col] = "N/A"
+                else:
+                    dimorphic_meta[-1][col] = ", ".join(vals.astype(str))
+
             # Add counts
             counts = table_fw.side.value_counts()
             dimorphic_meta[-1]["n_fwr"] = counts.get("right", 0)
@@ -339,9 +404,12 @@ def extract_type_data(mcns_meta, fw_meta):
             if len(vals) == 1:
                 male_meta[-1][col] = vals[0]
             elif len(vals) == 0:
-                male_meta[-1][col] = "None"
+                male_meta[-1][col] = "N/A"
             else:
                 male_meta[-1][col] = ", ".join(vals.astype(str))
+
+        # What type of dimorphism is this?
+        male_meta[-1]["dimorphism_type"] = "male-specific"
 
         # Add counts
         counts = table.somaSide.value_counts()
@@ -377,7 +445,7 @@ def extract_type_data(mcns_meta, fw_meta):
     female_types["type"] = (
         female_types.cell_type.fillna(female_types.malecns_type)
         .fillna(female_types.hemibrain_type)
-        .fillna("unknown")
+        # .fillna("unknown")
     )
     female_meta = []
     for t, table_fw in female_types.groupby("type"):
@@ -391,9 +459,12 @@ def extract_type_data(mcns_meta, fw_meta):
             if len(vals) == 1:
                 female_meta[-1][col] = vals[0]
             elif len(vals) == 0:
-                female_meta[-1][col] = "None"
+                female_meta[-1][col] = "N/A"
             else:
                 female_meta[-1][col] = ", ".join(vals.astype(str))
+
+        # What type of dimorphism is this?
+        female_meta[-1]["dimorphism_type"] = "female-specific"
 
         # Add counts
         counts = table_fw.side.value_counts()
@@ -409,6 +480,267 @@ def extract_type_data(mcns_meta, fw_meta):
     print(f"Found {len(female_meta):,} female-specific cell types.", flush=True)
 
     return dimorphic_meta, male_meta, female_meta
+
+
+def group_by_region(
+    dimorphic_meta: List[Dict],
+    male_meta: List[Dict],
+    female_meta: List[Dict],
+    mcns_roi_info: pd.DataFrame,
+    fw_roi_info: pd.DataFrame,
+    threshold=0.1,
+) -> List[List[Dict]]:
+    """Sort the dimorphic/sex-specific cell types into brain regions.
+
+    Parameters
+    ----------
+    dimorphic_meta :    list of dicts
+                        The meta data for the dimorphic cell types.
+    male_meta :         list of dicts
+                        The meta data for the male-specific cell types.
+    female_meta :       list of dicts
+                        The meta data for the female-specific cell types.
+    mcns_roi_info :     pd.DataFrame
+                        The ROI info for MaleCNS neurons as returned from neuPrint.
+    fw_roi_info :       pd.DataFrame
+                        The ROI info for FlyWire neurons. Compiled from Zenodo
+                        data dump - see loading.py for details.
+    threshold :         float [0-1]
+                        Fraction of the total in- OR outputs to a given ROI to be
+                        considered a main input/output. Default is 0.1.
+
+    Returns
+    -------
+    by_region :         dict with list of dicts
+                        A dictionary with list of dictionaries for each brain region:
+                        {"CentralBrain": [{"name": "region1", "types": []}, ...], ...}
+
+    """
+    # First assign each primary ROI to either Optic, VNC or brain
+    roi_hierarchy = NEUPRINT_CLIENT.meta["roiHierarchy"]
+    roi2compartment = {}
+    for comp in roi_hierarchy["children"]:
+        roi2compartment.update({c["name"]: comp["name"] for c in comp["children"]})
+
+    # Collapse left and right compartments
+    roi2compartment = {
+        r.replace("(L)", "").replace("(R)", ""): c.replace("(L)", "").replace("(R)", "")
+        for r, c in roi2compartment.items()
+    }
+
+    # Collapse left and right ROIs in the ROI info
+    mcns_roi_info["roi"] = (
+        mcns_roi_info["roi"].str.replace("(L)", "").str.replace("(R)", "")
+    )
+    fw_roi_info["roi"] = (
+        fw_roi_info["roi"].str.replace("(L)", "").str.replace("(R)", "")
+    )
+
+    # Fix up Mushroom body compartments to align with FlyWire
+    mb_vl = ("aL", "a'L")
+    mb_ml = ("gL", "bL", "b'L")
+    mcns_roi_info.loc[mcns_roi_info.roi.isin((mb_vl)), "roi"] = "MB_VL"
+    mcns_roi_info.loc[mcns_roi_info.roi.isin((mb_ml)), "roi"] = "MB_ML"
+    mcns_roi_info.loc[mcns_roi_info.roi == "PED", "roi"] = "MB_PED"
+    roi2compartment.update(
+        {"MB_VL": "CentralBrain", "MB_ML": "CentralBrain", "MB_PED": "CentralBrain"}
+    )
+
+    # Aggregate the ROI info again
+    mcns_roi_info = (
+        mcns_roi_info.groupby(["bodyId", "roi"])[["pre", "post"]].sum().reset_index()
+    )
+    fw_roi_info = (
+        fw_roi_info.groupby(["root_id", "roi"])[["pre", "post"]].sum().reset_index()
+    )
+
+    # Normalise the ROI counts
+    mcns_roi_info["post_norm"] = (
+        mcns_roi_info["post"]
+        / mcns_roi_info.bodyId.map(mcns_roi_info.groupby("bodyId")["post"].sum())
+    ).fillna(0)
+    mcns_roi_info["pre_norm"] = (
+        mcns_roi_info["pre"]
+        / mcns_roi_info.bodyId.map(mcns_roi_info.groupby("bodyId")["pre"].sum())
+    ).fillna(0)
+    fw_roi_info["post_norm"] = (
+        fw_roi_info["post"]
+        / fw_roi_info.root_id.map(fw_roi_info.groupby("root_id")["post"].sum())
+    ).fillna(0)
+    fw_roi_info["pre_norm"] = (
+        fw_roi_info["pre"]
+        / fw_roi_info.root_id.map(fw_roi_info.groupby("root_id")["pre"].sum())
+    ).fillna(0)
+
+    # Drop non-primary ROIs from mcns_roi_info
+    mcns_roi_info = mcns_roi_info[mcns_roi_info.roi.isin(list(roi2compartment))]
+
+    # Loop through each dimorphic cell type and get its main input/output ROIs
+    by_region = {}
+    for record in dimorphic_meta + male_meta:
+        # Parse the body IDs
+        if isinstance(record["bodyId"], str):
+            bids = np.array(record["bodyId"].split(",")).astype(int)
+        else:
+            bids = np.array([record["bodyId"]]).astype(int)
+
+        # Get aggregate ROIs for these IDs
+        rois = (
+            mcns_roi_info[mcns_roi_info.bodyId.isin(bids)]
+            .groupby("roi")[["pre_norm", "post_norm"]]
+            .mean()
+        )
+        record["roi_counts"] = rois.to_dict()
+
+        for roi in rois.index.values[
+            (rois.pre_norm >= threshold) | (rois.post_norm >= threshold)
+        ]:
+            comp = roi2compartment.get(roi, "unknown")
+            if comp not in by_region:
+                by_region[comp] = {}
+            if roi not in by_region[comp]:
+                by_region[comp][roi] = {"types": []}
+            by_region[comp][roi]["name"] = roi
+            by_region[comp][roi]["types"].append(record)
+
+    for record in female_meta:
+        # Parse the root IDs
+        if isinstance(record["root_id"], str):
+            roots = np.array(record["root_id"].split(",")).astype(int)
+        else:
+            roots = np.array([record["root_id"]]).astype(int)
+
+        # Get aggregate ROIs for these IDs
+        rois = (
+            fw_roi_info[fw_roi_info.root_id.isin(roots)]
+            .groupby("roi")[["pre_norm", "post_norm"]]
+            .mean()
+        )
+        record["roi_counts"] = rois.to_dict()
+
+        for roi in rois.index.values[
+            (rois.pre_norm >= threshold) | (rois.post_norm >= threshold)
+        ]:
+            comp = roi2compartment.get(roi, "unknown")
+            if comp not in by_region:
+                by_region[comp] = {}
+            if roi not in by_region[comp]:
+                by_region[comp][roi] = {"types": []}
+            by_region[comp][roi]["name"] = roi
+            by_region[comp][roi]["types"].append(record)
+
+    # Drop some ROIs that we don't want
+    for comp in by_region:
+        by_region[comp] = {
+            k: v
+            for k, v in by_region[comp].items()
+            if k
+            not in ["Optic-unspecified", "VNC-unspecified", "CentralBrain-unspecified"]
+        }
+
+    # Sort ROIs alphabetically
+    for comp in by_region:
+        by_region[comp] = {k: by_region[comp][k] for k in sorted(by_region[comp])}
+
+    # Sort types by how much they are in each compartment
+    for comp in by_region:
+        for roi in by_region[comp]:
+            by_region[comp][roi]["types"] = sorted(
+                by_region[comp][roi]["types"],
+                key=lambda x: max(
+                    x["roi_counts"]["pre_norm"][roi], x["roi_counts"]["post_norm"][roi]
+                ),
+                reverse=True,
+            )
+
+    return by_region
+
+
+def group_by_supertype(
+    dimorphic_meta: List[Dict],
+    male_meta: List[Dict],
+    female_meta: List[Dict],
+    mcns_meta: pd.DataFrame,
+    fw_meta: pd.DataFrame,
+) -> List[List[Dict]]:
+    """Sort the dimorphic/sex-specific cell types into supertypes.
+
+    Parameters
+    ----------
+    dimorphic_meta :    list of dicts
+                        The meta data for the dimorphic cell types.
+    male_meta :         list of dicts
+                        The meta data for the male-specific cell types.
+    female_meta :       list of dicts
+                        The meta data for the female-specific cell types.
+    mcns_meta :         pd.DataFrame
+                        The meta data for the neurons as returned from neuPrint.
+    fw_meta :           pd.DataFrame
+                        The meta data for the neurons as returned from FlyTable.
+
+    Returns
+    -------
+    by_supertype :      list of dicts
+                        A list with a dictionary for each supertype.
+
+    """
+    by_supertype = {}
+
+    def get_ids_from_record(record):
+        body_ids = np.array([], dtype=int)
+        if record.get("bodyId", None):
+            if isinstance(record["bodyId"], str):
+                body_ids = np.array(record["bodyId"].split(",")).astype(int)
+            else:
+                body_ids = np.array([record["bodyId"]], dtype=int)
+        root_ids = np.array([], dtype=int)
+        if record.get("root_id", None):
+            if isinstance(record["root_id"], str):
+                root_ids = np.array(record["root_id"].split(",")).astype(int)
+            else:
+                root_ids = np.array([record["root_id"]], dtype=int)
+
+        return body_ids, root_ids
+
+    # Loop through each dimorphic cell type and add it to its supertype
+    for record in dimorphic_meta + male_meta + female_meta:
+        body_ids, root_ids = get_ids_from_record(record)
+
+        # We're assuming that types with no supertype are their own supertypes
+        # N.B. that currently types can be split across multiple supertypes
+        supertypes = record.get("supertype", None)
+        if not supertypes:
+            supertypes = str(np.append(body_ids, root_ids).min())
+
+        for st in supertypes.split(","):
+            st = st.strip()
+            if st not in by_supertype:
+                by_supertype[st] = {
+                    "types": [],
+                    "body_ids": [],
+                    "root_ids": [],
+                    "dimorphism_types": set(),
+                }
+            by_supertype[st]["name"] = st
+            by_supertype[st]["types"].append(record)
+            by_supertype[st]["body_ids"].extend(body_ids)
+            by_supertype[st]["root_ids"].extend(root_ids)
+            by_supertype[st]["dimorphism_types"].add(record["dimorphism_type"])
+
+    # For each supertype collect some meta data
+    for name, st in by_supertype.items():
+        # MCNS counts
+        st["n_mcns"] = len(st["body_ids"])
+        # FlyWire counts
+        st["n_fw"] = len(st["root_ids"])
+        # What kind of dimorphism is in this supertype?
+        st["dimorphism_types"] = ", ".join(list(st["dimorphism_types"]))
+
+    # Convert the dictionary to a list and sort alphabetically by name
+    by_supertype = list(by_supertype.values())
+    by_supertype = sorted(by_supertype, key=lambda x: x["name"])
+
+    return by_supertype
 
 
 def group_by_hemilineage(
@@ -428,6 +760,10 @@ def group_by_hemilineage(
                         The meta data for the male-specific cell types.
     female_meta :       list of dicts
                         The meta data for the female-specific cell types.
+    mcns_meta :         pd.DataFrame
+                        The meta data for the neurons as returned from neuPrint.
+    fw_meta :           pd.DataFrame
+                        The meta data for the neurons as returned from FlyTable.
 
     Returns
     -------
@@ -453,7 +789,6 @@ def group_by_hemilineage(
 
         # Add the type's whole record to the hemilineage
         by_hemilineage[hl]["types"].append(record)
-        by_hemilineage[hl]["types"][-1]["type_type"] = "dimorphic"
 
     # Loop through each male-specific cell type and add it to the hemilineage
     for record in male_meta:
@@ -470,7 +805,6 @@ def group_by_hemilineage(
 
         # Add the type's whole record to the hemilineage
         by_hemilineage[hl]["types"].append(record)
-        by_hemilineage[hl]["types"][-1]["type_type"] = "male-specific"
 
     # Loop through each female-specific cell type and add it to the hemilineage
     for record in female_meta:
@@ -485,7 +819,6 @@ def group_by_hemilineage(
 
         # Add the type's whole record to the hemilineage
         by_hemilineage[hl]["types"].append(record)
-        by_hemilineage[hl]["types"][-1]["type_type"] = "female-specific"
 
     # For each hemilineage collect some meta data
     for hl in by_hemilineage:
@@ -533,18 +866,22 @@ def group_by_hemilineage(
     return by_hemilineage
 
 
-def make_supertype_pages(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame) -> None:
+def make_supertype_pages(
+    mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, skip_thumbnails: bool
+) -> None:
     """Generate the individual summaries for each (dimorphic) supertype.
 
+    Parameters
+    ----------
     mcns_meta : pd.DataFrame
                 The meta data for the neurons as returned from neuPrint.
     fw_meta :   pd.DataFrame
                 The meta data for the neurons as returned from FlyTable.
+    skip_thumbnails : bool
+                Whether to skip generating thumbnails for the supertype pages.
 
     """
     print("Generating supertype pages...", flush=True)
-    # Load the template for the summary pages
-    template = JINJA_ENV.get_template("supertype_individual.md")
 
     # Collect all supertypes
     supertypes = np.append(
@@ -618,6 +955,9 @@ def make_supertype_pages(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame) -> None
 
     print(f"Found {len(supertypes_meta):,} (dimorphic) supertypes.", flush=True)
 
+    # Load the template for the summary pages
+    template = JINJA_ENV.get_template("supertype_individual.md")
+
     # Loop through each super type and generate a page for it
     for record in supertypes_meta:
         print(
@@ -631,6 +971,34 @@ def make_supertype_pages(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame) -> None
         # Write the rendered HTML to a file
         with open(SUPERTYPE_DIR / f"{record['supertype']}.md", "w") as f:
             f.write(rendered)
+
+    if not skip_thumbnails:
+        print("Generating thumbnails for supertypes...", flush=True)
+        for record in supertypes_meta:
+            this_mcns_meta = mcns_meta[mcns_meta.supertype == record["supertype"]]
+            this_fw_meta = fw_meta[fw_meta.supertype == record["supertype"]]
+
+            if (
+                not this_mcns_meta.dimorphism.notnull().any()
+                and not this_fw_meta.dimorphism.notnull().any()
+            ):
+                print(
+                    f"  Skipping {record['supertype']}: no dimorphic neurons found.",
+                    flush=True,
+                )
+                continue
+
+            try:
+                generate_thumbnail(
+                    this_mcns_meta,
+                    this_fw_meta,
+                    THUMBNAILS_DIR / f"{record['supertype']}.png",
+                )
+            except Exception as e:
+                print(
+                    f"  Failed to generate thumbnail for supertype {record['supertype']}: {e}",
+                    flush=True,
+                )
 
     print("Done.", flush=True)
 
@@ -671,7 +1039,7 @@ def make_hemilineage_pages(mcns_meta, fw_meta):
                 if len(vals) == 1:
                     hemilineages_meta[-1][col] = vals[0]
                 elif len(vals) == 0:
-                    hemilineages_meta[-1][col] = "None"
+                    hemilineages_meta[-1][col] = "N/A"
                 else:
                     hemilineages_meta[-1][col] = ", ".join(vals.astype(str))
 
@@ -732,7 +1100,7 @@ def make_hemilineage_pages(mcns_meta, fw_meta):
     print("Done.", flush=True)
 
 
-def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: Path):
+def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: Path, skip_existing: bool = True):
     """Generate a thumbnail image for the given neuron type.
 
     Parameters
@@ -745,6 +1113,11 @@ def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: 
                 Path to write the file to.
 
     """
+    # Check if the output file already exists
+    if skip_existing and outfile.exists():
+        print(f"  Thumbnail {outfile.name} already exists, skipping...", flush=True)
+        return
+
     print(f"  Generating thumbnail {outfile.name}...", flush=True)
     global MESH_BRAIN, MESH_VNC, FLYWIRE_CLOUDVOL, OC_VIEWER
     # Load the mesh if it is not already loaded
@@ -769,6 +1142,10 @@ def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: 
     if not OC_VIEWER:
         OC_VIEWER = oc.Viewer(offscreen=True)
 
+    # Hide progress bars while loading meshes
+    # (there is currently no way to do that with navis.read_precomputed)
+    navis.config.pbar_hide = True
+
     # Get FlyWire meshes
     fw_meshes = navis.NeuronList([])
     if not fw_meta.empty:
@@ -779,7 +1156,6 @@ def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: 
             ],
             datatype="mesh",
             info=False,
-            progress=False,
         )
 
     # Get MCNS meshes
@@ -791,27 +1167,96 @@ def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: 
             [f"{base_url}/{id}.ngmesh" for id in mcns_meta["bodyId"]],
             datatype="mesh",
             info=False,
-            progress=False,
         )
 
-    # Plot
-    OC_VIEWER.add_mesh(MESH_BRAIN, color=(0.8, 0.8, 0.8), alpha=0.1)
-    OC_VIEWER.add_neurons(fw_meshes, color="#e511d0")
-    OC_VIEWER.add_neurons(mcns_meshes, color="#00e9e7")
-    OC_VIEWER.set_view(
-        {
-            "position": np.array([387225.3840714, 229749.96777565, 95873.17475057]),
-            "rotation": np.array([1.0, 0.0, 0.0, 0.0]),
-            "scale": np.array([1.0, 1.0, 1.0]),
-            "reference_up": np.array([0.0, -1.0, 0.0]),
-            "fov": 0.0,
-            "width": 480452.4541556888,
-            "height": 480452.4541556888,
-            "zoom": 1.0,
-            "maintain_aspect": True,
-            "depth_range": None,
-        }
+    # Show progress bars again
+    navis.config.pbar_hide = False
+
+    # Add neurons to viewer
+    if len(fw_meshes):
+        OC_VIEWER.add_neurons(fw_meshes, color="#e511d0")
+    if len(mcns_meshes):
+        OC_VIEWER.add_neurons(mcns_meshes, color="#00e9e7")
+
+    # What kind of neurons do we have?
+    if not mcns_meta.empty:
+        table = mcns_meta
+    else:
+        table = fw_meta
+    sc_col = "superclass" if "superclass" in table.columns else "super_class"
+    has_ascending = (
+        ("ascending_neuron" in table[sc_col].values)
+        or ("ascending" in table[sc_col].values)
+        or ("sensory_ascending" in table[sc_col].values)
     )
+    has_descending = (
+        ("descending_neuron" in table[sc_col].values)
+        or ("descending" in table[sc_col].values)
+        or ("sensory_descending" in table[sc_col].values)
+    )
+    has_central = ("cb_intrinsic" in table[sc_col].values) or (
+        "central" in table[sc_col].values
+    )
+    has_vnc = "vnc_intrinsic" in table[sc_col].values
+
+    # Pick a scene based on the neuron type
+    if has_ascending or has_descending or (has_central and has_vnc):
+        # Brain and VNC neurons
+        OC_VIEWER.add_mesh(MESH_BRAIN, color=(0.8, 0.8, 0.8), alpha=0.1)
+        OC_VIEWER.add_mesh(MESH_VNC, color=(0.8, 0.8, 0.8), alpha=0.1)
+        OC_VIEWER.set_view(
+            {
+                "position": np.array(
+                    [-380324.37368731, 274816.33737857, 570152.25830276]
+                ),
+                "rotation": np.array([-0.7110673, -0.03489443, 0.70219136, 0.00964166]),
+                "scale": np.array([1.0, 1.0, 1.0]),
+                "reference_up": np.array([0.0, -1.0, 0.0]),
+                "fov": 0.0,
+                "width": 766557.316514536,
+                "height": 766557.316514536,
+                "zoom": 1.0,
+                "maintain_aspect": True,
+                "depth_range": None,
+            }
+        )
+    elif has_vnc:
+        # Just VNC neurons
+        OC_VIEWER.add_mesh(MESH_VNC, color=(0.8, 0.8, 0.8), alpha=0.1)
+        OC_VIEWER.set_view(
+            {
+                "position": np.array(
+                    [389551.99130054, -255612.95457865, 608158.34951343]
+                ),
+                "rotation": np.array([0.54627717, 0.54208679, -0.45810277, 0.4448202]),
+                "scale": np.array([1.0, 1.0, 1.0]),
+                "reference_up": np.array([0.0, 0.0, 1.0]),
+                "fov": 0.0,
+                "width": 525756.094337834,
+                "height": 525756.094337834,
+                "zoom": 1.0,
+                "maintain_aspect": True,
+                "depth_range": None,
+            }
+        )
+    else:
+        # Just brain neurons
+        OC_VIEWER.add_mesh(MESH_BRAIN, color=(0.8, 0.8, 0.8), alpha=0.1)
+        OC_VIEWER.set_view(
+            {
+                "position": np.array([387225.3840714, 229749.96777565, 95873.17475057]),
+                "rotation": np.array([1.0, 0.0, 0.0, 0.0]),
+                "scale": np.array([1.0, 1.0, 1.0]),
+                "reference_up": np.array([0.0, -1.0, 0.0]),
+                "fov": 0.0,
+                "width": 480452.4541556888,
+                "height": 480452.4541556888,
+                "zoom": 1.0,
+                "maintain_aspect": True,
+                "depth_range": None,
+            }
+        )
+
     OC_VIEWER.screenshot(str(outfile.resolve()), size=(600, 400))
     OC_VIEWER.clear()
 
