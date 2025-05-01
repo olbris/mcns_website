@@ -26,12 +26,25 @@
 
 The website is build using `mkdocs` and `jinja2` templates. Dependencies are managed using `uv`.
 
+In addition, you need to set the following environment variables to set up for fetching meta data:
+- `NEUPRINT_APPLICATION_CREDENTIALS`: A neuPrint API token
+- `CAVE_SECRET`: API token for CAVE (FlyWire); this should not be needed, and I will remove it in the future
+- `SEATABLE_SERVER`: URL for our FlyTable instance
+- `SEATABLE_TOKEN`: API token for FlyTable
+
 To build the website locally, run:
 
 ```bash
 uv run build_pages.py
 uv run mkdocs build
 ```
+
+You can set various flags to control the build process:
+
+- `--skip-thumbnails`: Skip generation of the thumbnails (by far the most expensive part)
+- `--skip-graphs`: Skip generation of the network graphs (second most expensive part)
+- `--update-metadata`: Force updating the metadata (neuPrint/FlyTable)
+- `--clear-build`: Clear the build directory before building
 
 To serve the website locally, run:
 
