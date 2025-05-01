@@ -89,41 +89,46 @@ def load_cache_meta_data(force_update=False):
         print(
             "Loading and compiling FlyWire ROI info from Zenodo...", flush=True, end=""
         )
-        # Load presynapses (17Mb)
-        r = requests.get(
-            "https://flyem.mrc-lmb.cam.ac.uk/flyconnectome/flywire_connectivity/per_neuron_neuropil_filtered_count_pre_783.feather"
-        )
-        r.raise_for_status()
-        pre = pd.read_feather(BytesIO(r.content)).rename(
-            columns={"pre_pt_root_id": "root_id"}
-        )
-        # Load postsynapses (233Mb)
-        r = requests.get(
-            "https://flyem.mrc-lmb.cam.ac.uk/flyconnectome/flywire_connectivity/per_neuron_neuropil_filtered_count_post_783.feather"
-        )
-        r.raise_for_status()
-        post = pd.read_feather(BytesIO(r.content)).rename(
-            columns={"post_pt_root_id": "root_id"}
-        )
-        # Combine
-        fw_roi_info = pd.merge(
-            pre.set_index(["root_id", "neuropil"])["count"],
-            post.set_index(["root_id", "neuropil"])["count"],
-            left_index=True,
-            right_index=True,
-        ).reset_index(drop=False)
-        fw_roi_info.columns = ["root_id", "roi", "pre", "post"]
+        # # Load presynapses (17Mb)
+        # r = requests.get(
+        #     "https://flyem.mrc-lmb.cam.ac.uk/flyconnectome/flywire_connectivity/per_neuron_neuropil_filtered_count_pre_783.feather"
+        # )
+        # r.raise_for_status()
+        # pre = pd.read_feather(BytesIO(r.content)).rename(
+        #     columns={"pre_pt_root_id": "root_id"}
+        # )
+        # # Load postsynapses (233Mb)
+        # r = requests.get(
+        #     "https://flyem.mrc-lmb.cam.ac.uk/flyconnectome/flywire_connectivity/per_neuron_neuropil_filtered_count_post_783.feather"
+        # )
+        # r.raise_for_status()
+        # post = pd.read_feather(BytesIO(r.content)).rename(
+        #     columns={"post_pt_root_id": "root_id"}
+        # )
+        # # Combine
+        # fw_roi_info = pd.merge(
+        #     pre.set_index(["root_id", "neuropil"])["count"],
+        #     post.set_index(["root_id", "neuropil"])["count"],
+        #     left_index=True,
+        #     right_index=True,
+        # ).reset_index(drop=False)
+        # fw_roi_info.columns = ["root_id", "roi", "pre", "post"]
 
-        # Rename neuropils to align to MaleCNS
-        fw_roi_info.loc[fw_roi_info.roi.str.endswith("_L", na=False), "roi"] = (
-            fw_roi_info.loc[
-                fw_roi_info.roi.str.endswith("_L", na=False), "roi"
-            ].str.replace("_L", "(L)")
-        )
-        fw_roi_info.loc[fw_roi_info.roi.str.endswith("_R", na=False), "roi"] = (
-            fw_roi_info.loc[
-                fw_roi_info.roi.str.endswith("_R", na=False), "roi"
-            ].str.replace("_R", "(R)")
+        # # Rename neuropils to align to MaleCNS
+        # fw_roi_info.loc[fw_roi_info.roi.str.endswith("_L", na=False), "roi"] = (
+        #     fw_roi_info.loc[
+        #         fw_roi_info.roi.str.endswith("_L", na=False), "roi"
+        #     ].str.replace("_L", "(L)")
+        # )
+        # fw_roi_info.loc[fw_roi_info.roi.str.endswith("_R", na=False), "roi"] = (
+        #     fw_roi_info.loc[
+        #         fw_roi_info.roi.str.endswith("_R", na=False), "roi"
+        #     ].str.replace("_R", "(R)")
+        # )
+
+        # Load the finished file from flyem1 - we're trying to avoid issues on Github actions
+        fw_roi_info = pd.read_feather(
+            "https://flyem.mrc-lmb.cam.ac.uk/flyconnectome/flywire_connectivity/fw_roi_info.feather"
         )
 
         # Save to cache
