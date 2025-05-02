@@ -2,6 +2,7 @@
 Functions for building the various bits and pieces of the website.
 """
 
+import re
 import navis
 import logging
 import warnings
@@ -26,6 +27,7 @@ from .env import (
     THUMBNAILS_DIR,
     SUPERTYPE_DIR,
     HEMILINEAGE_DIR,
+    SYNONYMS_DIR,
     NGL_BASE_SCENE,
     NGL_BASE_SCENE_VNC,
     NGL_BASE_SCENE_TOP,
@@ -108,6 +110,11 @@ def make_dimorphism_pages(
         dimorphic_meta, male_meta, female_meta, mcns_roi_info, fw_roi_info
     )
 
+    # Group types by synonyms
+    by_synonyms = group_by_synonyms(
+        dimorphic_meta, male_meta, female_meta, mcns_meta, fw_meta
+    )
+
     print("Generating overview page...", flush=True)
 
     # Load the template for the overview page
@@ -119,9 +126,11 @@ def make_dimorphism_pages(
         male_types=male_meta,
         female_types=female_meta,
         summary_types_dir=SUMMARY_TYPES_DIR.name,
-        hemilineages=by_hemilineage,
-        supertypes=by_supertype,
+        hemilineages=[by_hemilineage[k] for k in sorted(by_hemilineage)],
+        supertypes=[by_supertype[k] for k in sorted(by_supertype)],
         regions=by_region,
+        synonyms=[by_synonyms[k] for k in sorted(by_synonyms)],
+        synonyms_dir=SYNONYMS_DIR.name,
     )
 
     #  Write the rendered HTML to a file
@@ -307,7 +316,7 @@ def extract_type_data(mcns_meta, fw_meta):
     """
     ####
     # Dimorphic types
-    ###
+    ####
 
     # Filter to dimorphic types
     # (i.e. "sexually dimorphic" and "potentially sexually dimorphic")
@@ -738,11 +747,113 @@ def group_by_supertype(
         # What kind of dimorphism is in this supertype?
         st["dimorphism_types"] = ", ".join(list(st["dimorphism_types"]))
 
-    # Convert the dictionary to a list and sort alphabetically by name
-    by_supertype = list(by_supertype.values())
-    by_supertype = sorted(by_supertype, key=lambda x: x["name"])
-
     return by_supertype
+
+
+def group_by_synonyms(
+    dimorphic_meta: List[Dict],
+    male_meta: List[Dict],
+    female_meta: List[Dict],
+    mcns_meta: pd.DataFrame,
+    fw_meta: pd.DataFrame,
+) -> List[List[Dict]]:
+    """Sort the dimorphic/sex-specific cell types into synonyms.
+
+    Note that each type can have multiple synonyms!
+
+    Parameters
+    ----------
+    dimorphic_meta :    list of dicts
+                        The meta data for the dimorphic cell types.
+    male_meta :         list of dicts
+                        The meta data for the male-specific cell types.
+    female_meta :       list of dicts
+                        The meta data for the female-specific cell types.
+    mcns_meta :         pd.DataFrame
+                        The meta data for the neurons as returned from neuPrint.
+    fw_meta :           pd.DataFrame
+                        The meta data for the neurons as returned from FlyTable.
+
+    Returns
+    -------
+    by_synonyms :       list of dicts
+                        A list with a dictionary for each synonyms.
+
+    """
+    # Loop through each dimorphic cell type and parse it's synonyms
+    by_synonyms = {}
+    for record in dimorphic_meta + male_meta + female_meta:
+        if not record.get("synonyms", None):
+            continue
+        if record.get("synonyms") in ("N/A", "None"):
+            continue
+
+        synonyms = record["synonyms"].split(";")
+
+        # Parse synonyms
+        for syn in synonyms:
+            syn = syn.strip()
+            # Check if the synonym follows the "{Author} {Year}: {Synonym}"
+            if ":" not in syn:
+                continue
+            author_year, syn = syn.split(":")
+            author_year = author_year.strip()
+            syn = syn.strip()
+            # We might have multiple authors/years, "Author1 Year1, Author2 Year2: Synonym"
+            author_year_parsed = []
+            for ay in author_year.split(","):
+                ay = ay.strip()
+                # Check that we have author + year
+                if not re.match(r"^[A-Za-z ]+ \d{4}$", ay):
+                    print(f"  Invalid author/year format: {ay}", flush=True)
+                    continue
+                author_year_parsed.append(ay)
+            if not author_year_parsed:
+                print(f"  No valid author/year found for {syn}", flush=True)
+                continue
+            author_year = ", ".join(author_year_parsed)
+
+            # Make sure the synonym is in the dictionary
+            if syn not in by_synonyms:
+                by_synonyms[syn] = {
+                    "types": [],
+                    "body_ids": [],
+                    "root_ids": [],
+                    "dimorphism_types": set(),
+                    "author_year_str": author_year,
+                    "publications": [],
+                }
+            body_ids, root_ids = _get_ids_from_record(record)
+
+            by_synonyms[syn]["name"] = syn
+            by_synonyms[syn]["types"].append(record)
+            by_synonyms[syn]["body_ids"].extend(body_ids)
+            by_synonyms[syn]["root_ids"].extend(root_ids)
+            by_synonyms[syn]["publications"].append(author_year)
+            by_synonyms[syn]["dimorphism_types"].add(record["dimorphism_type"])
+
+    # For each supertype collect some meta data
+    for name, syn in by_synonyms.items():
+        # There is at least one case of "aIP1/aIP4/aSP10" which causes issue with filepaths
+        syn["file_name"] = name.replace(" ", "_").replace("/", "_")
+
+        # MCNS counts
+        syn["n_mcns"] = len(syn["body_ids"])
+        # FlyWire counts
+        syn["n_fw"] = len(syn["root_ids"])
+        # What kind of dimorphism is in this supertype?
+        syn["dimorphism_types"] = ", ".join(list(syn["dimorphism_types"]))
+
+        scene = prep_scene(
+            mcns_meta[mcns_meta.bodyId.isin(syn["body_ids"])]
+            if len(syn["body_ids"]) > 0
+            else fw_meta[fw_meta.root_id.isin(syn["root_ids"])]
+        )
+        scene.layers[1]["segments"] = syn["body_ids"]
+        scene.layers[2]["segments"] = syn["root_ids"]
+        syn["url"] = scene.url
+
+    return by_synonyms
 
 
 def group_by_hemilineage(
@@ -859,10 +970,8 @@ def group_by_hemilineage(
         # Add the URL to the hemilineage
         by_hemilineage[hl]["url"] = scene.url
 
-    # Convert the dictionary to a list and sort alphabetically by name
-    by_hemilineage = list(by_hemilineage.values())
-    by_hemilineage = sorted(by_hemilineage, key=lambda x: x["name"])
-    for hl in by_hemilineage:
+    # Sort types alphabetically
+    for hl in by_hemilineage.values():
         hl["types"] = sorted(hl["types"], key=lambda x: x["type"])
 
     return by_hemilineage
@@ -922,10 +1031,6 @@ def make_supertype_pages(
         supertypes_meta[-1]["n_types_mcnsr"] = type_counts.get("R", 0)
         supertypes_meta[-1]["n_types_mcnsl"] = type_counts.get("L", 0)
 
-        # Get a neuroglancer scene to populate
-        scene = prep_scene(table_mcns)
-        scene.layers[1]["segments"] = table_mcns["bodyId"].values
-
         # Grab the corresponding supertype in FlyWire
         table_fw = fw_meta[fw_meta.supertype == t]
 
@@ -950,8 +1055,10 @@ def make_supertype_pages(
         supertypes_meta[-1]["n_types_fwr"] = type_counts.get("right", 0)
         supertypes_meta[-1]["n_types_fwl"] = type_counts.get("left", 0)
 
+        # Get a neuroglancer scene to populate
+        scene = prep_scene(table_mcns if not table_mcns.empty else table_fw)
+        scene.layers[1]["segments"] = table_mcns["bodyId"].values
         scene.layers[2]["segments"] = table_fw["root_id"].values
-        scene.layers[2]["segmentDefaultColor"] = "#e511d0"
 
         supertypes_meta[-1]["url"] = scene.url
 
@@ -999,6 +1106,162 @@ def make_supertype_pages(
             except Exception as e:
                 print(
                     f"  Failed to generate thumbnail for supertype {record['supertype']}: {e}",
+                    flush=True,
+                )
+
+    print("Done.", flush=True)
+
+
+def make_synonyms_pages(
+    mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, skip_thumbnails: bool
+) -> None:
+    """Generate the individual summaries for each (dimorphic) synonym.
+
+    Parameters
+    ----------
+    mcns_meta : pd.DataFrame
+                The meta data for the neurons as returned from neuPrint.
+    fw_meta :   pd.DataFrame
+                The meta data for the neurons as returned from FlyTable.
+    skip_thumbnails : bool
+                Whether to skip generating thumbnails for the synonym pages.
+
+    """
+    print("Generating synonym pages...", flush=True)
+
+    # Collect all synonyms
+    all_synonyms = np.append(
+        mcns_meta.synonyms.dropna().unique(), fw_meta.synonyms.dropna().unique()
+    )
+    all_synonyms = np.unique(all_synonyms)
+
+    # For each type compile a dictionary with relevant data
+    synonyms_meta = {}
+    for synonyms in all_synonyms:
+        # Get all neurons with this synonym
+        this_mcns = mcns_meta[mcns_meta.synonyms == synonyms]
+        this_fw = fw_meta[fw_meta.synonyms == synonyms]
+
+        # Get the IDs (this will include things that are not typed yet)
+        body_ids = this_mcns.bodyId.values.tolist()
+        root_ids = this_fw.root_id.values.tolist()
+
+        # Do we have any kind of dimorphism in this synonym?
+        dimorphisms = np.unique(
+            np.append(
+                this_mcns.dimorphism.dropna().unique(),
+                this_fw.dimorphism.dropna().unique(),
+            )
+        ).astype(str)
+
+        itoleeHl = np.unique(
+            np.append(
+                this_mcns.itoleeHl.dropna().unique(), this_fw.ito_lee_hemilineage.dropna().unique()
+            )
+        ).tolist()
+        if not len(itoleeHl):
+            itoleeHl = "N/A"
+
+        trumanHl = this_mcns.trumanHl.dropna().unique().tolist()
+        if not len(trumanHl):
+            trumanHl = "N/A"
+
+        # Parse synonyms
+        for string in synonyms.split(";"):
+            # Check if the synonym follows the "{Author} {Year}: {Synonym}"
+            if ":" not in string:
+                continue
+            # Split into publication and the actual synonym
+            author_year, syn = string.split(":")
+            author_year, syn = author_year.strip(), syn.strip()
+            # We might have multiple authors/years, "Author1 Year1, Author2 Year2: Synonym"
+            author_year_parsed = []
+            for ay in author_year.split(","):
+                ay = ay.strip()
+                # Check that we have author + year
+                if not re.match(r"^[A-Za-z ]+ \d{4}$", ay):
+                    print(f"  Invalid author/year format: {ay}", flush=True)
+                    continue
+                author_year_parsed.append(ay)
+            if not author_year_parsed:
+                print(f"  No valid author/year found for {syn}", flush=True)
+                continue
+            author_year_str = ", ".join(author_year_parsed)
+
+            # Make sure the synonym is in the dictionary
+            if syn not in synonyms_meta:
+                synonyms_meta[syn] = {
+                    "types": [],
+                    "body_ids": [],
+                    "root_ids": [],
+                    "dimorphism_types": ",".join(dimorphisms),
+                    "author_year_str": author_year_str,
+                    "publications": set(),
+                    "itoleeHl": itoleeHl,
+                    "trumanHl": trumanHl,
+                }
+
+            synonyms_meta[syn]["name"] = syn
+            synonyms_meta[syn]["body_ids"].extend(body_ids)
+            synonyms_meta[syn]["root_ids"].extend(root_ids)
+            synonyms_meta[syn]["publications"] = synonyms_meta[syn][
+                "publications"
+            ].union(set(author_year_parsed))
+
+    # Collect the dimorphic types for each synonym
+    dimorphic_meta, male_meta, female_meta = extract_type_data(mcns_meta, fw_meta)
+    by_synonyms = group_by_synonyms(
+        dimorphic_meta, male_meta, female_meta, mcns_meta, fw_meta
+    )
+
+    # Now that we have all the synonyms, compile some extra data
+    for name, syn in synonyms_meta.items():
+        # There is at least one case of "aIP1/aIP4/aSP10" which causes issue with filepaths
+        syn["file_name"] = name.replace(" ", "_").replace("/", "_")
+
+        # MCNS & FlyWire counts
+        syn["n_mcns"] = len(syn["body_ids"])
+        syn["n_fw"] = len(syn["root_ids"])
+
+        # Generate a neuroglancer link
+        scene = prep_scene(
+            mcns_meta[mcns_meta.bodyId.isin(syn["body_ids"])]
+            if len(syn["body_ids"]) > 0
+            else fw_meta[fw_meta.root_id.isin(syn["root_ids"])]
+        )
+        scene.layers[1]["segments"] = syn["body_ids"]
+        scene.layers[2]["segments"] = syn["root_ids"]
+        syn["url"] = scene.url
+
+        syn['types'] = by_synonyms.get(name, {}).get("types", [])
+
+    # Load the template for the summary pages
+    template = JINJA_ENV.get_template("synonym_individual.md")
+
+    # Loop through each super type and generate a page for it
+    for syn, record in synonyms_meta.items():
+        print(
+            f"  Generating summary page for synonym '{record['name']}'...",
+            flush=True,
+        )
+
+        # Render the template with the meta data
+        rendered = template.render(meta=record)
+
+        # Write the rendered HTML to a file
+        with open(SYNONYMS_DIR / f"{record['file_name']}.md", "w") as f:
+            f.write(rendered)
+
+        if not skip_thumbnails:
+            try:
+                generate_thumbnail(
+                    mcns_meta[mcns_meta.bodyId.isin(record["body_ids"])],
+                    fw_meta[fw_meta.root_id.isin(record["root_ids"])],
+                    THUMBNAILS_DIR / f"{record['file_name']}.png",
+                )
+            except Exception as e:
+                print(
+                    f"  Failed to generate thumbnail for synonym {record['file_name']}: {e}",
                     flush=True,
                 )
 
@@ -1102,7 +1365,12 @@ def make_hemilineage_pages(mcns_meta, fw_meta):
     print("Done.", flush=True)
 
 
-def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: Path, skip_existing: bool = True):
+def generate_thumbnail(
+    mcns_meta: pd.DataFrame,
+    fw_meta: pd.DataFrame,
+    outfile: Path,
+    skip_existing: bool = True,
+):
     """Generate a thumbnail image for the given neuron type.
 
     Parameters
@@ -1156,8 +1424,7 @@ def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: 
         # (presumably because it uses processes rather than threads)
         base_url = FLYWIRE_SOURCE.replace("precomputed://", "")
         futures = {
-            FUTURE_SESSION.get(f"{base_url}/{id}"): id
-            for id in fw_meta["root_id"]
+            FUTURE_SESSION.get(f"{base_url}/{id}"): id for id in fw_meta["root_id"]
         }
 
         for future in as_completed(futures):
@@ -1457,7 +1724,8 @@ def clear_build_directory():
         BUILD_DIR,
         GRAPH_DIR,
         SUMMARY_TYPES_DIR,
-        THUMBNAILS_DIR,
+        SYNONYMS_DIR,
+        # THUMBNAILS_DIR,
         SUPERTYPE_DIR,
         HEMILINEAGE_DIR,
     ):
@@ -1513,3 +1781,21 @@ def prep_scene(table):
     scene.layers[2]["segmentDefaultColor"] = "#e511d0"
 
     return scene
+
+
+def _get_ids_from_record(record):
+    """Get the body and root IDs from a record."""
+    body_ids = np.array([], dtype=int)
+    if record.get("bodyId", None):
+        if isinstance(record["bodyId"], str):
+            body_ids = np.array(record["bodyId"].split(",")).astype(int)
+        else:
+            body_ids = np.array([record["bodyId"]], dtype=int)
+    root_ids = np.array([], dtype=int)
+    if record.get("root_id", None):
+        if isinstance(record["root_id"], str):
+            root_ids = np.array(record["root_id"].split(",")).astype(int)
+        else:
+            root_ids = np.array([record["root_id"]], dtype=int)
+
+    return body_ids, root_ids

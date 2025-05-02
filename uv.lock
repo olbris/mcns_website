@@ -464,7 +464,7 @@ wheels = [
 [[package]]
 name = "cocoa"
 version = "0.1.1"
-source = { git = "https://github.com/flyconnectome/cocoa?rev=models#d9a4b83e258ce03ba4d410f1693ace95bd14146d" }
+source = { git = "https://github.com/flyconnectome/cocoa?rev=models#c8aa7f48b64decc0de16df36ae78b575858e3e30" }
 dependencies = [
     { name = "clio-py" },
     { name = "dash" },

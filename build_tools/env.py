@@ -23,13 +23,15 @@ NGL_BASE_URL_TOP = "https://clio-ng.janelia.org/#!gs://flyem-user-links/short/20
 NGL_BASE_SCENE_TOP = ngl.Scene.from_url(NGL_BASE_URL_TOP)
 
 # Make backgrounds white
-for scene in (NGL_BASE_SCENE, NGL_BASE_SCENE_VNC, NGL_BASE_SCENE_TOP):
-    scene["projectionBackgroundColor"] = "#ffffff"
+# for scene in (NGL_BASE_SCENE, NGL_BASE_SCENE_VNC, NGL_BASE_SCENE_TOP):
+#     scene["projectionBackgroundColor"] = "#ffffff"
 
 #####
 # URLs for the MCNS and FlyWire meta data
 #####
-FLYWIRE_SOURCE = NGL_BASE_SCENE.layers["female (FlyWire)"]["source"]  # precomputed layer
+FLYWIRE_SOURCE = NGL_BASE_SCENE.layers["female (FlyWire)"][
+    "source"
+]  # precomputed layer
 MCNS_SOURCE = NGL_BASE_SCENE.layers["maleCNS"]["source"]["url"]  # DVID layer
 DVID_SERVER = "https://" + MCNS_SOURCE.replace("dvid://https://", "").split("/")[0]
 DVID_NODE = MCNS_SOURCE.replace("dvid://https://", "").split("/")[1]
@@ -71,6 +73,7 @@ THUMBNAILS_DIR = BUILD_DIR / "thumbnails"
 GRAPH_DIR = BUILD_DIR / "graphs"
 SUPERTYPE_DIR = BUILD_DIR / "supertypes"
 HEMILINEAGE_DIR = BUILD_DIR / "hemilineages"
+SYNONYMS_DIR = BUILD_DIR / "synonyms"
 
 # Directory for the some cached data (use the --update-metadata flag to trigger a refresh)
 CACHE_DIR = REPO_BASE_PATH / ".cache"
@@ -89,6 +92,7 @@ for dir in (
     GRAPH_DIR,
     SUPERTYPE_DIR,
     HEMILINEAGE_DIR,
+    SYNONYMS_DIR,
 ):
     dir.mkdir(parents=True, exist_ok=True)
 

@@ -14,13 +14,13 @@ hemi-lineage, or their synonym.
 
 === "By Terminal Type"
 
-    Here we present the list of dimorphic neurons grouped by their terminal type.
+    Here we present the list of dimorphic neurons grouped by their terminal cell type.
 
     === "Sexually dimorphic cell types"
 
         <div class="grid cards" style="text-align: center;" markdown>
         {% for row in dimorphic_types %}
-          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
+          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.label }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
         {% endfor %}
         </div>
 
@@ -28,7 +28,7 @@ hemi-lineage, or their synonym.
 
         <div class="grid cards" style="text-align: center;" markdown>
         {% for row in male_types %}
-          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
+          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.label }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
         {% endfor %}
         </div>
 
@@ -36,13 +36,19 @@ hemi-lineage, or their synonym.
 
         <div class="grid cards" style="text-align: center;" markdown>
         {% for row in female_types %}
-          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
+          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.label }}]({{ summary_types_dir }}/{{ row.type_file }}.md)
         {% endfor %}
         </div>
 
 === "By Clone/Synonym"
 
-    _TODO_
+    Past literature describes many dimorphic cell types. Here we present the list of dimorphic cell types listed by their clone/synonym:
+
+    <div class="grid cards" style="text-align: center;" markdown>
+    {% for row in synonyms %}
+      - ![](thumbnails/{{ row.file_name }}.png)[{{ row.name }}]({{ synonyms_dir }}/{{ row.file_name }}.md) ({{ row.author_year_str }})
+    {% endfor %}
+    </div>
 
 === "By Brain Region"
 
@@ -56,7 +62,7 @@ hemi-lineage, or their synonym.
 
             <div class="grid cards" style="text-align: center;" markdown>
             {% for row in record.types %}
-              - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.dimorphism_type }})
+              - ![](thumbnails/{{ row.type_file }}.png)[{{ row.label }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.dimorphism_type }})
             {% endfor %}
             </div>
 
@@ -69,7 +75,7 @@ hemi-lineage, or their synonym.
 
             <div class="grid cards" style="text-align: center;" markdown>
             {% for row in record.types %}
-              - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.dimorphism_type }})
+              - ![](thumbnails/{{ row.type_file }}.png)[{{ row.label }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.dimorphism_type }})
             {% endfor %}
             </div>
 
@@ -82,7 +88,7 @@ hemi-lineage, or their synonym.
 
             <div class="grid cards" style="text-align: center;" markdown>
             {% for row in record.types %}
-              - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.dimorphism_type }})
+              - ![](thumbnails/{{ row.type_file }}.png)[{{ row.label }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.dimorphism_type }})
             {% endfor %}
             </div>
 
@@ -98,7 +104,6 @@ hemi-lineage, or their synonym.
       - ![](thumbnails/{{ row.name }}.png)[{{ row.name }}](supertypes/{{ row.name }}.md) ({{ row.dimorphism_types }})
     {% endfor %}
     </div>
-
 
 === "By Hemilineage"
 
@@ -130,11 +135,11 @@ hemi-lineage, or their synonym.
             </div>
         </div>
 
-        <h4 style="margin-top: 1.5em;">Cell Types</h4>
+        <h4 style="margin-top: 1.5em;">Dimorphic Cell Types</h4>
 
         <div class="grid cards" style="text-align: center;" markdown>
         {% for row in record.types %}
-          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.type }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.dimorphism_type }})
+          - ![](thumbnails/{{ row.type_file }}.png)[{{ row.label }}]({{ summary_types_dir }}/{{ row.type_file }}.md) ({{ row.dimorphism_type }})
         {% endfor %}
         </div>
 

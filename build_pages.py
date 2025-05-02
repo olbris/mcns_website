@@ -51,11 +51,15 @@ parser.add_argument(
     help="Skip the generation of summary pages for hemilineages.",
 )
 parser.add_argument(
+    "--skip-synonyms",
+    action="store_true",
+    help="Skip the generation of summary pages for synonyms.",
+)
+parser.add_argument(
     "--clear-build",
     action="store_true",
     help="Clear the build directory before generating pages.",
 )
-
 
 if __name__ == "__main__":
     # Load the template
@@ -80,6 +84,12 @@ if __name__ == "__main__":
     # Generate the supertype pages
     if not args.skip_supertypes:
         building.make_supertype_pages(
+            mcns_meta, fw_meta, skip_thumbnails=args.skip_thumbnails
+        )
+
+    # Generate the individual synonyms pages + thumbnails
+    if not args.skip_synonyms:
+        building.make_synonyms_pages(
             mcns_meta, fw_meta, skip_thumbnails=args.skip_thumbnails
         )
 
