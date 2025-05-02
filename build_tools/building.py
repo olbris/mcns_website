@@ -391,11 +391,25 @@ def extract_type_data(mcns_meta, fw_meta):
 
         dimorphic_meta[-1]["url"] = scene.url
 
+        # Last but not least: find a label to use for this type
+        for col in (
+            "type",
+            "hemibrain_type",
+            "flywire_type",
+            "malecns_type",
+            "cell_type",
+            "mapping",  # resort to the mapping if all else fails
+        ):
+            if col in table.columns:
+                if table[col].notnull().any():
+                    dimorphic_meta[-1]["label"] = table[col].dropna().unique()[0]
+                    break
+
     print(f"Found {len(dimorphic_meta):,} dimorphic cell types.", flush=True)
 
     ####
     # Male-specific types
-    ###
+    ####
 
     # Filter to male-specific types
     male_types = mcns_meta[mcns_meta.dimorphism.str.contains("male-specific", na=False)]
@@ -443,19 +457,23 @@ def extract_type_data(mcns_meta, fw_meta):
         scene.layers[1]["segments"] = table["bodyId"].values
         male_meta[-1]["url"] = scene.url
 
+        # For male-specific neurons we should always have a `type`
+        male_meta[-1]["label"] = t
+
     print(f"Found {len(male_meta):,} male-specific cell types.", flush=True)
 
     ####
     # Female-specific types
-    ###
+    ####
     # Filter to female-specific types
     female_types = fw_meta[
         fw_meta.dimorphism.str.contains("female-specific", na=False)
     ].copy()
 
     female_types["type"] = (
-        female_types.cell_type.fillna(female_types.malecns_type)
-        .fillna(female_types.hemibrain_type)
+        female_types.cell_type.fillna(female_types.malecns_type).fillna(
+            female_types.hemibrain_type
+        )
         # .fillna("unknown")
     )
     female_meta = []
@@ -487,6 +505,9 @@ def extract_type_data(mcns_meta, fw_meta):
         scene.layers[2]["segments"] = table_fw["root_id"].values
 
         female_meta[-1]["url"] = scene.url
+
+        # For female-specific neurons we should always have a `type`
+        female_meta[-1]["label"] = t
 
     print(f"Found {len(female_meta):,} female-specific cell types.", flush=True)
 
@@ -697,25 +718,9 @@ def group_by_supertype(
     """
     by_supertype = {}
 
-    def get_ids_from_record(record):
-        body_ids = np.array([], dtype=int)
-        if record.get("bodyId", None):
-            if isinstance(record["bodyId"], str):
-                body_ids = np.array(record["bodyId"].split(",")).astype(int)
-            else:
-                body_ids = np.array([record["bodyId"]], dtype=int)
-        root_ids = np.array([], dtype=int)
-        if record.get("root_id", None):
-            if isinstance(record["root_id"], str):
-                root_ids = np.array(record["root_id"].split(",")).astype(int)
-            else:
-                root_ids = np.array([record["root_id"]], dtype=int)
-
-        return body_ids, root_ids
-
     # Loop through each dimorphic cell type and add it to its supertype
     for record in dimorphic_meta + male_meta + female_meta:
-        body_ids, root_ids = get_ids_from_record(record)
+        body_ids, root_ids = _get_ids_from_record(record)
 
         # We're assuming that types with no supertype are their own supertypes
         # N.B. that currently types can be split across multiple supertypes
