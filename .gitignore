@@ -1,6 +1,9 @@
 # Ignore cached data
 .cache/
 
+# Ignore artifacts
+thumbnails.tar.gz
+
 # Ignore build
 docs/build
 
