@@ -1893,6 +1893,7 @@ dependencies = [
     { name = "octarine3d" },
     { name = "pyarrow" },
     { name = "requests" },
+    { name = "requests-futures" },
 ]
 
 [package.metadata]
@@ -1910,6 +1911,7 @@ requires-dist = [
     { name = "octarine3d", git = "https://github.com/schlegelp/octarine" },
     { name = "pyarrow", specifier = ">=19.0.1" },
     { name = "requests", specifier = ">=2.32.3" },
+    { name = "requests-futures", specifier = ">=1.0.2" },
 ]
 
 [[package]]

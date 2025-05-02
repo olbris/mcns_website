@@ -18,6 +18,7 @@ dependencies = [
     "octarine3d",
     "pyarrow>=19.0.1",
     "requests>=2.32.3",
+    "requests-futures>=1.0.2",
 ]
 
 [tool.uv.sources]

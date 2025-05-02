@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import List, Dict
 from urllib.parse import quote_plus
 from d3graph import d3graph, vec2adjmat
+from concurrent.futures import as_completed
 
 from .env import (
     BUILD_DIR,
@@ -35,6 +36,7 @@ from .env import (
     DVID_SERVER,
     DVID_NODE,
     NEUPRINT_CLIENT,
+    FUTURE_SESSION,
 )
 
 # Silence the d3graph logger
@@ -1149,25 +1151,40 @@ def generate_thumbnail(mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, outfile: 
     # Get FlyWire meshes
     fw_meshes = navis.NeuronList([])
     if not fw_meta.empty:
-        fw_meshes = navis.read_precomputed(
-            [
-                f"{FLYWIRE_SOURCE.replace('precomputed://', '')}/{id}"
-                for id in fw_meta["root_id"]
-            ],
-            datatype="mesh",
-            info=False,
-        )
+        # Read precomputed meshes from FlyWire
+        # Note: we could use navis.read_precomputed directly but that's slower
+        # (presumably because it uses processes rather than threads)
+        base_url = FLYWIRE_SOURCE.replace("precomputed://", "")
+        futures = {
+            FUTURE_SESSION.get(f"{base_url}/{id}"): id
+            for id in fw_meta["root_id"]
+        }
+
+        for future in as_completed(futures):
+            id = futures[future]
+            r = future.result()
+            r.raise_for_status()
+            fw_meshes.append(
+                navis.read_precomputed(r.content, datatype="mesh", info=False, id=id)
+            )
 
     # Get MCNS meshes
     mcns_meshes = navis.NeuronList([])
     if not mcns_meta.empty:
         # Read precomputed meshes from DVID
         base_url = f"{DVID_SERVER}/api/node/{DVID_NODE}/segmentation_meshes/key"
-        mcns_meshes = navis.read_precomputed(
-            [f"{base_url}/{id}.ngmesh" for id in mcns_meta["bodyId"]],
-            datatype="mesh",
-            info=False,
-        )
+        futures = {
+            FUTURE_SESSION.get(f"{base_url}/{id}.ngmesh"): id
+            for id in mcns_meta["bodyId"]
+        }
+
+        for future in as_completed(futures):
+            id = futures[future]
+            r = future.result()
+            r.raise_for_status()
+            mcns_meshes.append(
+                navis.read_precomputed(r.content, datatype="mesh", info=False, id=id)
+            )
 
     # Show progress bars again
     navis.config.pbar_hide = False

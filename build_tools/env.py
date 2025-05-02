@@ -6,7 +6,11 @@ import nglscenes as ngl
 import navis.interfaces.neuprint as neu
 
 from pathlib import Path
+from requests_futures.sessions import FuturesSession
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+# FutureSession for async requests
+FUTURE_SESSION = FuturesSession(max_workers=10)
 
 #####
 # A basic Neuroglancer scene to use as a base for the visualisation
