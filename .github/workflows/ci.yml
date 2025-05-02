@@ -27,6 +27,11 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install uv
+      - name: Download thumbnails
+        run: |
+            mkdir -p docs/build/thumbnails
+            curl -o thumbnails.tar.gz https://flyem.mrc-lmb.cam.ac.uk/flyconnectome/misc/thumbnails.tar.gz
+            tar -xzf thumbnails.tar.gz
       - name: build
         env:
           NEUPRINT_APPLICATION_CREDENTIALS: ${{ secrets.NEUPRINT_APPLICATION_CREDENTIALS }}
