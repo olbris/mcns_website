@@ -5,13 +5,17 @@
 
 ## TODOs
 
-### Dimorphism overview
-- [ ] Add explanation / example of dimorphism
+### General
+- [ ] switch from unstructured dictionaries to DataClasses for more transparent data handling
 
-### Individual dimorphism summaries
+### Dimorphism overview
+- [ ] add explanation / example of dimorphism
+
+### Individual summaries
 - [x] 3d plots
 - [x] neuroglancer links
-- [ ] network graphs and partner summaries
+- [x] network graphs
+- [ ] partner summaries
 - [ ] dendrogram/umap of the N closest types
 - [ ] for sex-specific neurons: closest type in the other sex
 
