@@ -22,6 +22,11 @@ NGL_BASE_SCENE_VNC = ngl.Scene.from_url(NGL_BASE_URL_VNC)
 NGL_BASE_URL_TOP = "https://clio-ng.janelia.org/#!gs://flyem-user-links/short/2025-04-28.112442.425526.json"
 NGL_BASE_SCENE_TOP = ngl.Scene.from_url(NGL_BASE_URL_TOP)
 
+# Make sure the segmentation layers are empty
+for scene in (NGL_BASE_SCENE, NGL_BASE_SCENE_VNC, NGL_BASE_SCENE_TOP):
+    for i in range(2):
+        scene.layers[i]['segments'] = []
+
 # Make backgrounds white
 # for scene in (NGL_BASE_SCENE, NGL_BASE_SCENE_VNC, NGL_BASE_SCENE_TOP):
 #     scene["projectionBackgroundColor"] = "#ffffff"
