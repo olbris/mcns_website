@@ -339,7 +339,7 @@ def extract_type_data(mcns_meta, fw_meta):
             elif len(vals) == 0:
                 dimorphic_meta[-1][col] = "N/A"
             else:
-                dimorphic_meta[-1][col] = ", ".join(vals.astype(str))
+                dimorphic_meta[-1][col] = ", ".join(sorted(vals.astype(str)))
 
         # What type of dimorphism is this?
         dimorphic_meta[-1]["dimorphism_type"] = "dimorphic"
@@ -380,7 +380,7 @@ def extract_type_data(mcns_meta, fw_meta):
                 elif len(vals) == 0:
                     dimorphic_meta[-1][col] = "N/A"
                 else:
-                    dimorphic_meta[-1][col] = ", ".join(vals.astype(str))
+                    dimorphic_meta[-1][col] = ", ".join(sorted(vals.astype(str)))
 
             # Add counts
             counts = table_fw.side.value_counts()
@@ -431,7 +431,7 @@ def extract_type_data(mcns_meta, fw_meta):
             elif len(vals) == 0:
                 male_meta[-1][col] = "N/A"
             else:
-                male_meta[-1][col] = ", ".join(vals.astype(str))
+                male_meta[-1][col] = ", ".join(sorted(vals.astype(str)))
 
         # What type of dimorphism is this?
         male_meta[-1]["dimorphism_type"] = "male-specific"
@@ -490,7 +490,7 @@ def extract_type_data(mcns_meta, fw_meta):
             elif len(vals) == 0:
                 female_meta[-1][col] = "N/A"
             else:
-                female_meta[-1][col] = ", ".join(vals.astype(str))
+                female_meta[-1][col] = ", ".join(sorted(vals.astype(str)))
 
         # What type of dimorphism is this?
         female_meta[-1]["dimorphism_type"] = "female-specific"
