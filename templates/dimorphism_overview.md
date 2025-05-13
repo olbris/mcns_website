@@ -42,7 +42,7 @@ hemi-lineage, or their synonym.
 
 === "By Clone/Synonym"
 
-    Past literature describes many dimorphic cell types. Here we present the list of dimorphic cell types listed by their clone/synonym:
+    Prior literature describes many dimorphic cell types. Where possible we have tried to match these, often light-level based, types to neurons in the EM.
 
     <div class="grid cards" style="text-align: center;" markdown>
     {% for row in synonyms %}

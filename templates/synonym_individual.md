@@ -70,11 +70,18 @@ tags:
 ### Dimorphic Cell Types
 
 <div class="grid cards" style="text-align: center;" markdown>
-{% for row in meta.types %}
+{% for row in meta.types_dim %}
   - ![](../../thumbnails/{{ row.type_file }}.png)[{{ row.label }}](../../summary_types/{{ row.type_file }}) ({{ row.dimorphism_type }})
 {% endfor %}
 </div>
 
+### Isomorphic Cell Types
+
+<div class="grid cards" style="text-align: center;" markdown>
+{% for row in meta.types_iso %}
+  - ![](../../thumbnails/{{ row.type_file }}.png)[{{ row.label }}](../../summary_types/{{ row.type_file }}) ({{ row.dimorphism_type }})
+{% endfor %}
+</div>
 
 
 

@@ -14,7 +14,7 @@ tags:
 <!-- this links the font-awesome stylesheet v4 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-# Dimorphic Cell Type "{{ meta.type }}" [:octicons-link-external-24:{ .small-icon }]( {{ meta.neuprint_url }} "View on NeuPrint"){target="_blank"}
+# Isomorphic Cell Type "{{ meta.type }}" [:octicons-link-external-24:{ .small-icon }]( {{ meta.neuprint_url }} "View on NeuPrint"){target="_blank"}
 
 
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">

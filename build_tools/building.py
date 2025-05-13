@@ -44,6 +44,11 @@ from .env import (
 # Silence the d3graph logger
 logging.getLogger("d3graph").setLevel(logging.WARNING)
 
+DIMORPHIC_META = None
+MALE_META = None
+FEMALE_META = None
+ISO_META = None
+
 MESH_BRAIN = None
 MESH_VNC = None
 OC_VIEWER = None
@@ -88,12 +93,15 @@ def make_dimorphism_pages(
 
     """
     # Collect data for the various types
-    dimorphic_meta, male_meta, female_meta = extract_type_data(mcns_meta, fw_meta)
+    dimorphic_meta, male_meta, female_meta, iso_meta = extract_type_data(
+        mcns_meta, fw_meta
+    )
 
     # Sort the meta data alphabetically by type
     dimorphic_meta = sorted(dimorphic_meta, key=lambda x: x["type"])
     male_meta = sorted(male_meta, key=lambda x: x["type"])
     female_meta = sorted(female_meta, key=lambda x: x["type"])
+    iso_meta = sorted(iso_meta, key=lambda x: x["type"])
 
     # Group types by hemilineages
     by_hemilineage = group_by_hemilineage(
@@ -112,8 +120,11 @@ def make_dimorphism_pages(
 
     # Group types by synonyms
     by_synonyms = group_by_synonyms(
-        dimorphic_meta, male_meta, female_meta, mcns_meta, fw_meta
+        dimorphic_meta, male_meta, female_meta, iso_meta, mcns_meta, fw_meta
     )
+
+    # For the overview page, we will only show synonyms containing dimorphic types
+    by_synonyms = {k: v for k, v in by_synonyms.items() if v["has_dimorphic_types"]}
 
     print("Generating overview page...", flush=True)
 
@@ -139,8 +150,8 @@ def make_dimorphism_pages(
 
     print("Done.", flush=True)
 
-    # Generate individual pages for each dimorphic cell type
-    print("Generating individual dimorphism pages...", flush=True, end="")
+    # Generate individual pages for each cell type
+    print("Generating individual type pages...", flush=True, end="")
 
     # Loop through each dimorphic cell type and generate a page for it
     individual_template = JINJA_ENV.get_template("dimorphism_individual.md")
@@ -291,11 +302,62 @@ def make_dimorphism_pages(
         with open(SUMMARY_TYPES_DIR / f"{record['type_file']}.md", "w") as f:
             f.write(rendered)
 
+    # Loop through each isomorphic cell type that contributes to a synonym
+    individual_template = JINJA_ENV.get_template("isomorphism_individual.md")
+    for name, syn in by_synonyms.items():
+        for record in syn['types_iso']:
+            print(
+                f"  Generating summary page for isomorphic type {record['type']} ({name})...",
+                flush=True,
+            )
+
+            # Generate the graph
+            # if not skip_graphs:
+            #     try:
+            #         generate_graphs(
+            #             record["type"],
+            #             pd.DataFrame(),
+            #             fw_meta[fw_meta["mapping"] == record["mapping"]],
+            #             mcns_meta,
+            #             fw_meta,
+            #             fw_edges,
+            #         )
+            #     except Exception as e:
+            #         print(
+            #             f"  Failed to generate graph for {record['type']}: {e}", flush=True
+            #         )
+
+            record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
+            record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
+
+            if not skip_thumbnails:
+                # Generate the thumbnail
+                try:
+                    generate_thumbnail(
+                        mcns_meta[mcns_meta["mapping"] == record["mapping"]],
+                        fw_meta[fw_meta["mapping"] == record["mapping"]],
+                        THUMBNAILS_DIR / f"{record['type_file']}.png",
+                    )
+                except Exception as e:
+                    print(
+                        f"  Failed to generate thumbnail for {record['type']}: {e}",
+                        flush=True,
+                    )
+
+            # Render the template with the meta data
+            rendered = individual_template.render(meta=record)
+
+            # Write the rendered HTML to a file
+            with open(SUMMARY_TYPES_DIR / f"{record['type_file']}.md", "w") as f:
+                f.write(rendered)
+
     print("Done.", flush=True)
 
 
 def extract_type_data(mcns_meta, fw_meta):
-    """Extract the data for the dimorphic cell types.
+    """Extract the data for the iso- and dimorphic cell types.
+
+    This will be generate only once per build.
 
     Parameters
     ----------
@@ -312,8 +374,18 @@ def extract_type_data(mcns_meta, fw_meta):
                     The meta data for the male-specific cell types.
     female_meta :   list of dicts
                     The meta data for the female-specific cell types.
+    iso_meta :      list of dicts
+                    The meta data for the isomorphic cell types.
 
     """
+    # Check if we have already generated the meta data
+    global DIMORPHIC_META, MALE_META, FEMALE_META, ISO_META
+    if DIMORPHIC_META is not None:
+        return DIMORPHIC_META.copy(), MALE_META.copy(), FEMALE_META.copy(), ISO_META.copy()
+
+    # Prepare FlyWire meta data for faster indexing
+    fw_meta_grp = {k: v for k, v in fw_meta.groupby("mapping")}
+
     ####
     # Dimorphic types
     ####
@@ -333,13 +405,14 @@ def extract_type_data(mcns_meta, fw_meta):
 
         # Agglomerate into a single value for each column (if possible)
         for col in table.columns:
-            vals = table[col].dropna().unique()
+            vals = table[col].unique()
+            vals = vals[~pd.isnull(vals)]  # dropping NaNs afterwards is faster
             if len(vals) == 1:
                 dimorphic_meta[-1][col] = vals[0]
             elif len(vals) == 0:
                 dimorphic_meta[-1][col] = "N/A"
             else:
-                dimorphic_meta[-1][col] = ", ".join(sorted(vals.astype(str)))
+                dimorphic_meta[-1][col] = "; ".join(sorted(vals.astype(str)))
 
         # What type of dimorphism is this?
         dimorphic_meta[-1]["dimorphism_type"] = "dimorphic"
@@ -365,7 +438,7 @@ def extract_type_data(mcns_meta, fw_meta):
         scene.layers[1]["segments"] = table["bodyId"].values
 
         # Grab the corresponding type in FlyWire
-        table_fw = fw_meta[fw_meta["mapping"] == t]
+        table_fw = fw_meta_grp.get(t, pd.DataFrame([]))
         if table_fw.empty:
             print(f"  No matching FlyWire type for {t}.", flush=True)
         else:
@@ -374,13 +447,14 @@ def extract_type_data(mcns_meta, fw_meta):
                 # Skip columns that are already in the MCNS meta data
                 if col in mcns_meta.columns:
                     continue
-                vals = table_fw[col].dropna().unique()
+                vals = table_fw[col].unique()
+                vals = vals[~pd.isnull(vals)]  # dropping NaNs afterwards is faster
                 if len(vals) == 1:
                     dimorphic_meta[-1][col] = vals[0]
                 elif len(vals) == 0:
                     dimorphic_meta[-1][col] = "N/A"
                 else:
-                    dimorphic_meta[-1][col] = ", ".join(sorted(vals.astype(str)))
+                    dimorphic_meta[-1][col] = "; ".join(sorted(vals.astype(str)))
 
             # Add counts
             counts = table_fw.side.value_counts()
@@ -425,13 +499,14 @@ def extract_type_data(mcns_meta, fw_meta):
         male_meta[-1]["type_file"] = t.replace(" ", "_").replace("/", "_")
 
         for col in table.columns:
-            vals = table[col].dropna().unique()
+            vals = table[col].unique()
+            vals = vals[~pd.isnull(vals)]  # dropping NaNs afterwards is faster
             if len(vals) == 1:
                 male_meta[-1][col] = vals[0]
             elif len(vals) == 0:
                 male_meta[-1][col] = "N/A"
             else:
-                male_meta[-1][col] = ", ".join(sorted(vals.astype(str)))
+                male_meta[-1][col] = "; ".join(sorted(vals.astype(str)))
 
         # What type of dimorphism is this?
         male_meta[-1]["dimorphism_type"] = "male-specific"
@@ -484,13 +559,14 @@ def extract_type_data(mcns_meta, fw_meta):
 
         # Agglomerate into a single value for each column (if possible)
         for col in table_fw.columns:
-            vals = table_fw[col].dropna().unique()
+            vals = table_fw[col].unique()
+            vals = vals[~pd.isnull(vals)]  # dropping NaNs afterwards is faster
             if len(vals) == 1:
                 female_meta[-1][col] = vals[0]
             elif len(vals) == 0:
                 female_meta[-1][col] = "N/A"
             else:
-                female_meta[-1][col] = ", ".join(sorted(vals.astype(str)))
+                female_meta[-1][col] = "; ".join(sorted(vals.astype(str)))
 
         # What type of dimorphism is this?
         female_meta[-1]["dimorphism_type"] = "female-specific"
@@ -511,7 +587,107 @@ def extract_type_data(mcns_meta, fw_meta):
 
     print(f"Found {len(female_meta):,} female-specific cell types.", flush=True)
 
-    return dimorphic_meta, male_meta, female_meta
+    ####
+    # Isomorphic types
+    ####
+
+    # Filter to isomorphic types
+    isomorphic_types = mcns_meta[mcns_meta.dimorphism.isnull()].drop(
+        columns=["roiInfo", "inputRois", "outputRois"]
+    )
+
+    # For each type compile a dictionary with relevant data
+    iso_meta = []
+    for t, table in isomorphic_types.groupby("mapping"):
+        iso_meta.append({})
+
+        iso_meta[-1]["type_file"] = t.replace(" ", "_").replace("/", "_")
+
+        # Agglomerate into a single value for each column (if possible)
+        for col in table.columns:
+            vals = table[col].unique()
+            vals = vals[~pd.isnull(vals)]  # dropping NaNs afterwards is faster
+            if len(vals) == 1:
+                iso_meta[-1][col] = vals[0]
+            elif len(vals) == 0:
+                iso_meta[-1][col] = "N/A"
+            else:
+                iso_meta[-1][col] = "; ".join(sorted(vals.astype(str)))
+
+        # What type of dimorphism is this?
+        iso_meta[-1]["dimorphism_type"] = "isomorphic"
+
+        # Add counts
+        counts = table.somaSide.value_counts()
+        if counts.empty:
+            counts = table.rootSide.value_counts()
+
+        iso_meta[-1]["n_mcnsr"] = counts.get("R", 0)
+        iso_meta[-1]["n_mcnsl"] = counts.get("L", 0)
+
+        # Generate links to neuPrint
+        iso_meta[-1]["neuprint_url"] = NEUPRINT_SEARCH_URL.format(
+            neuron_name=quote_plus(iso_meta[-1]["type"])
+        )
+        iso_meta[-1]["neuprint_conn_url"] = NEUPRINT_CONNECTIVITY_URL.format(
+            neuron_name=quote_plus(iso_meta[-1]["type"])
+        )
+
+        # Get a neuroglancer scene to populate
+        scene = prep_scene(table)
+        scene.layers[1]["segments"] = table["bodyId"].values
+
+        # Grab the corresponding type in FlyWire
+        table_fw = fw_meta_grp.get(t, pd.DataFrame([]))
+        if table_fw.empty:
+            print(f"  No matching FlyWire type for {t}.", flush=True)
+        else:
+            # Agglomerate into a single value for each column (if possible)
+            for col in table_fw.columns:
+                # Skip columns that are already in the MCNS meta data
+                if col in mcns_meta.columns:
+                    continue
+                vals = table_fw[col].unique()
+                vals = vals[~pd.isnull(vals)]  # dropping NaNs afterwards is faster
+                if len(vals) == 1:
+                    iso_meta[-1][col] = vals[0]
+                elif len(vals) == 0:
+                    iso_meta[-1][col] = "N/A"
+                else:
+                    iso_meta[-1][col] = "; ".join(sorted(vals.astype(str)))
+
+            # Add counts
+            counts = table_fw.side.value_counts()
+            iso_meta[-1]["n_fwr"] = counts.get("right", 0)
+            iso_meta[-1]["n_fwl"] = counts.get("left", 0)
+
+            scene.layers[2]["segments"] = table_fw["root_id"].values
+
+        iso_meta[-1]["url"] = scene.url
+
+        # Last but not least: find a label to use for this type
+        for col in (
+            "type",
+            "hemibrain_type",
+            "flywire_type",
+            "malecns_type",
+            "cell_type",
+            "mapping",  # resort to the mapping if all else fails
+        ):
+            if col in table.columns:
+                if table[col].notnull().any():
+                    iso_meta[-1]["label"] = table[col].dropna().unique()[0]
+                    break
+
+    print(f"Found {len(iso_meta):,} isomorphic cell types.", flush=True)
+
+    # Save the meta data for later use
+    DIMORPHIC_META = dimorphic_meta.copy()
+    MALE_META = male_meta.copy()
+    FEMALE_META = female_meta.copy()
+    ISO_META = iso_meta.copy()
+
+    return dimorphic_meta, male_meta, female_meta, iso_meta
 
 
 def group_by_region(
@@ -612,7 +788,7 @@ def group_by_region(
     for record in dimorphic_meta + male_meta:
         # Parse the body IDs
         if isinstance(record["bodyId"], str):
-            bids = np.array(record["bodyId"].split(",")).astype(int)
+            bids = np.array(record["bodyId"].split(";")).astype(int)
         else:
             bids = np.array([record["bodyId"]]).astype(int)
 
@@ -638,7 +814,7 @@ def group_by_region(
     for record in female_meta:
         # Parse the root IDs
         if isinstance(record["root_id"], str):
-            roots = np.array(record["root_id"].split(",")).astype(int)
+            roots = np.array(record["root_id"].split(";")).astype(int)
         else:
             roots = np.array([record["root_id"]]).astype(int)
 
@@ -728,7 +904,7 @@ def group_by_supertype(
         if not supertypes:
             supertypes = str(np.append(body_ids, root_ids).min())
 
-        for st in supertypes.split(","):
+        for st in supertypes.split(";"):
             st = st.strip()
             if st not in by_supertype:
                 by_supertype[st] = {
@@ -750,7 +926,7 @@ def group_by_supertype(
         # FlyWire counts
         st["n_fw"] = len(st["root_ids"])
         # What kind of dimorphism is in this supertype?
-        st["dimorphism_types"] = ", ".join(list(st["dimorphism_types"]))
+        st["dimorphism_types"] = "; ".join(list(st["dimorphism_types"]))
 
     return by_supertype
 
@@ -759,6 +935,7 @@ def group_by_synonyms(
     dimorphic_meta: List[Dict],
     male_meta: List[Dict],
     female_meta: List[Dict],
+    iso_meta: List[Dict],
     mcns_meta: pd.DataFrame,
     fw_meta: pd.DataFrame,
 ) -> List[List[Dict]]:
@@ -774,6 +951,8 @@ def group_by_synonyms(
                         The meta data for the male-specific cell types.
     female_meta :       list of dicts
                         The meta data for the female-specific cell types.
+    iso_meta :          list of dicts
+                        The meta data for the isomorphic cell types.
     mcns_meta :         pd.DataFrame
                         The meta data for the neurons as returned from neuPrint.
     fw_meta :           pd.DataFrame
@@ -787,7 +966,7 @@ def group_by_synonyms(
     """
     # Loop through each dimorphic cell type and parse it's synonyms
     by_synonyms = {}
-    for record in dimorphic_meta + male_meta + female_meta:
+    for record in dimorphic_meta + male_meta + female_meta + iso_meta:
         if not record.get("synonyms", None):
             continue
         if record.get("synonyms") in ("N/A", "None"):
@@ -801,12 +980,15 @@ def group_by_synonyms(
             # Check if the synonym follows the "{Author} {Year}: {Synonym}"
             if ":" not in syn:
                 continue
-            author_year, syn = syn.split(":")
+            try:
+                author_year, syn = syn.split(":")
+            except ValueError:
+                raise ValueError(f"  Failed to parse synonym: {syn}")
             author_year = author_year.strip()
             syn = syn.strip()
             # We might have multiple authors/years, "Author1 Year1, Author2 Year2: Synonym"
             author_year_parsed = []
-            for ay in author_year.split(","):
+            for ay in author_year.split(";"):
                 ay = ay.strip()
                 # Check that we have author + year
                 if not re.match(r"^[A-Za-z ]+ \d{4}$", ay):
@@ -816,12 +998,13 @@ def group_by_synonyms(
             if not author_year_parsed:
                 print(f"  No valid author/year found for {syn}", flush=True)
                 continue
-            author_year = ", ".join(author_year_parsed)
+            author_year = "; ".join(author_year_parsed)
 
             # Make sure the synonym is in the dictionary
             if syn not in by_synonyms:
                 by_synonyms[syn] = {
-                    "types": [],
+                    "types_dim": [],
+                    "types_iso": [],
                     "body_ids": [],
                     "root_ids": [],
                     "dimorphism_types": set(),
@@ -831,11 +1014,15 @@ def group_by_synonyms(
             body_ids, root_ids = _get_ids_from_record(record)
 
             by_synonyms[syn]["name"] = syn
-            by_synonyms[syn]["types"].append(record)
             by_synonyms[syn]["body_ids"].extend(body_ids)
             by_synonyms[syn]["root_ids"].extend(root_ids)
             by_synonyms[syn]["publications"].append(author_year)
             by_synonyms[syn]["dimorphism_types"].add(record["dimorphism_type"])
+
+            if record["dimorphism_type"] == "isomorphic":
+                by_synonyms[syn]["types_iso"].append(record)
+            else:
+                by_synonyms[syn]["types_dim"].append(record)
 
     # For each supertype collect some meta data
     for name, syn in by_synonyms.items():
@@ -846,8 +1033,11 @@ def group_by_synonyms(
         syn["n_mcns"] = len(syn["body_ids"])
         # FlyWire counts
         syn["n_fw"] = len(syn["root_ids"])
+        # Does this synonym contain dimorphic types?
+        # (i.e. "sexually dimorphic" and "potentially sexually dimorphic")
+        syn["has_dimorphic_types"] = len(syn["dimorphism_types"] - {"isomorphic"}) > 0
         # What kind of dimorphism is in this supertype?
-        syn["dimorphism_types"] = ", ".join(list(syn["dimorphism_types"]))
+        syn["dimorphism_types"] = "; ".join(list(syn["dimorphism_types"]))
 
         scene = prep_scene(
             mcns_meta[mcns_meta.bodyId.isin(syn["body_ids"])]
@@ -1021,7 +1211,7 @@ def make_supertype_pages(
                 if len(vals) == 1:
                     supertypes_meta[-1][col] = vals[0]
                 else:
-                    supertypes_meta[-1][col] = ", ".join(vals.astype(str))
+                    supertypes_meta[-1][col] = "; ".join(vals.astype(str))
 
         # Add neuron counts
         counts = table_mcns.somaSide.value_counts()
@@ -1048,7 +1238,7 @@ def make_supertype_pages(
                 if len(vals) == 1:
                     supertypes_meta[-1][col] = vals[0]
                 else:
-                    supertypes_meta[-1][col] = ", ".join(vals.astype(str))
+                    supertypes_meta[-1][col] = "; ".join(vals.astype(str))
 
         # Add counts
         counts = table_fw.side.value_counts()
@@ -1161,7 +1351,8 @@ def make_synonyms_pages(
 
         itoleeHl = np.unique(
             np.append(
-                this_mcns.itoleeHl.dropna().unique(), this_fw.ito_lee_hemilineage.dropna().unique()
+                this_mcns.itoleeHl.dropna().unique(),
+                this_fw.ito_lee_hemilineage.dropna().unique(),
             )
         ).tolist()
         if not len(itoleeHl):
@@ -1181,7 +1372,7 @@ def make_synonyms_pages(
             author_year, syn = author_year.strip(), syn.strip()
             # We might have multiple authors/years, "Author1 Year1, Author2 Year2: Synonym"
             author_year_parsed = []
-            for ay in author_year.split(","):
+            for ay in author_year.split(";"):
                 ay = ay.strip()
                 # Check that we have author + year
                 if not re.match(r"^[A-Za-z ]+ \d{4}$", ay):
@@ -1196,10 +1387,11 @@ def make_synonyms_pages(
             # Make sure the synonym is in the dictionary
             if syn not in synonyms_meta:
                 synonyms_meta[syn] = {
-                    "types": [],
+                    "types_dim": [],
+                    "types_iso": [],
                     "body_ids": [],
                     "root_ids": [],
-                    "dimorphism_types": ",".join(dimorphisms),
+                    "dimorphism_types": ";".join(dimorphisms),
                     "author_year_str": author_year_str,
                     "publications": set(),
                     "itoleeHl": itoleeHl,
@@ -1214,9 +1406,11 @@ def make_synonyms_pages(
             ].union(set(author_year_parsed))
 
     # Collect the dimorphic types for each synonym
-    dimorphic_meta, male_meta, female_meta = extract_type_data(mcns_meta, fw_meta)
+    dimorphic_meta, male_meta, female_meta, iso_meta = extract_type_data(
+        mcns_meta, fw_meta
+    )
     by_synonyms = group_by_synonyms(
-        dimorphic_meta, male_meta, female_meta, mcns_meta, fw_meta
+        dimorphic_meta, male_meta, female_meta, iso_meta, mcns_meta, fw_meta
     )
 
     # Now that we have all the synonyms, compile some extra data
@@ -1238,12 +1432,14 @@ def make_synonyms_pages(
         scene.layers[2]["segments"] = syn["root_ids"]
         syn["url"] = scene.url
 
-        syn['types'] = by_synonyms.get(name, {}).get("types", [])
+        # Get the dimorphic types for this synonym
+        syn["types_dim"] = by_synonyms.get(name, {}).get("types_dim", [])
+        syn["types_iso"] = by_synonyms.get(name, {}).get("types_iso", [])
 
     # Load the template for the summary pages
     template = JINJA_ENV.get_template("synonym_individual.md")
 
-    # Loop through each super type and generate a page for it
+    # Loop through each synonym and generate a page for it
     for syn, record in synonyms_meta.items():
         print(
             f"  Generating summary page for synonym '{record['name']}'...",
@@ -1311,7 +1507,7 @@ def make_hemilineage_pages(mcns_meta, fw_meta):
                 elif len(vals) == 0:
                     hemilineages_meta[-1][col] = "N/A"
                 else:
-                    hemilineages_meta[-1][col] = ", ".join(vals.astype(str))
+                    hemilineages_meta[-1][col] = "; ".join(vals.astype(str))
 
             # Add neuron counts
             counts = table.somaSide.value_counts()
@@ -1793,13 +1989,13 @@ def _get_ids_from_record(record):
     body_ids = np.array([], dtype=int)
     if record.get("bodyId", None):
         if isinstance(record["bodyId"], str):
-            body_ids = np.array(record["bodyId"].split(",")).astype(int)
+            body_ids = np.array(record["bodyId"].split(";")).astype(int)
         else:
             body_ids = np.array([record["bodyId"]], dtype=int)
     root_ids = np.array([], dtype=int)
     if record.get("root_id", None):
         if isinstance(record["root_id"], str):
-            root_ids = np.array(record["root_id"].split(",")).astype(int)
+            root_ids = np.array(record["root_id"].split(";")).astype(int)
         else:
             root_ids = np.array([record["root_id"]], dtype=int)
 
