@@ -305,7 +305,7 @@ def make_dimorphism_pages(
     # Loop through each isomorphic cell type that contributes to a synonym
     individual_template = JINJA_ENV.get_template("isomorphism_individual.md")
     for name, syn in by_synonyms.items():
-        for record in syn['types_iso']:
+        for record in syn["types_iso"]:
             print(
                 f"  Generating summary page for isomorphic type {record['type']} ({name})...",
                 flush=True,
@@ -327,7 +327,9 @@ def make_dimorphism_pages(
             #             f"  Failed to generate graph for {record['type']}: {e}", flush=True
             #         )
 
-            record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
+            record["graph_file_fw"] = (
+                BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
+            )
             record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
 
             if not skip_thumbnails:
@@ -381,7 +383,12 @@ def extract_type_data(mcns_meta, fw_meta):
     # Check if we have already generated the meta data
     global DIMORPHIC_META, MALE_META, FEMALE_META, ISO_META
     if DIMORPHIC_META is not None:
-        return DIMORPHIC_META.copy(), MALE_META.copy(), FEMALE_META.copy(), ISO_META.copy()
+        return (
+            DIMORPHIC_META.copy(),
+            MALE_META.copy(),
+            FEMALE_META.copy(),
+            ISO_META.copy(),
+        )
 
     # Prepare FlyWire meta data for faster indexing
     fw_meta_grp = {k: v for k, v in fw_meta.groupby("mapping")}
@@ -680,6 +687,31 @@ def extract_type_data(mcns_meta, fw_meta):
                     break
 
     print(f"Found {len(iso_meta):,} isomorphic cell types.", flush=True)
+
+    # Run some last clean-ups
+    for record in dimorphic_meta + male_meta + female_meta + iso_meta:
+        # Add hyperlinks to the synonyms
+        synonyms = record.get("synonyms", None)
+        if not synonyms or synonyms == "N/A":
+            record["synonyms_linked"] = ""
+            continue
+
+        # Parse synonyms
+        synonyms_linked = []
+        for syn in synonyms.split(";"):
+            syn = syn.strip()
+            # Check if the synonym follows the "{Author} {Year}: {Synonym}"
+            if ":" not in syn:
+                continue
+            try:
+                author_year, syn = syn.split(":")
+            except ValueError:
+                raise ValueError(f"  Failed to parse synonym: {syn}")
+            author_year, syn = author_year.strip(), syn.strip()
+            synonyms_linked.append(
+                f'{author_year}: <a href="../../synonyms/{syn}">{syn}</a>'
+            )
+        record["synonyms_linked"] = "; ".join(synonyms_linked)
 
     # Save the meta data for later use
     DIMORPHIC_META = dimorphic_meta.copy()

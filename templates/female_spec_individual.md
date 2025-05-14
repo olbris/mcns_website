@@ -64,7 +64,7 @@ tags:
             <hr style="margin: 0;">
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Synonyms: </div>
-                <div style="display: table-cell;"> {{ meta.synonyms }} </div>
+                <div style="display: table-cell;"> {{ meta.synonyms_linked }} </div>
             </div>
             <hr style="margin: 0;">
             <div style="display: table-row">
