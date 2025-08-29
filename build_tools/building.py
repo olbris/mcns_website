@@ -5,6 +5,7 @@ Functions for building the various bits and pieces of the website.
 import re
 import navis
 import logging
+import random
 import warnings
 
 import dvid as dv
@@ -66,6 +67,7 @@ def make_dimorphism_pages(
     fw_roi_info: pd.DataFrame,
     skip_graphs: bool = False,
     skip_thumbnails: bool = False,
+    random_pages: int = None,
 ) -> None:
     """Generate the overview page and individual summaries for each dimorphic cell type.
 
@@ -86,6 +88,8 @@ def make_dimorphism_pages(
                 If True, skip generating the graphs for the neurons.
     skip_thumbnails : bool
                 If True, skip generating the thumbnails for the neurons.
+    random_pages : int or None
+                If an int is provided, generate this many random pages.
 
     Returns
     -------
@@ -155,6 +159,8 @@ def make_dimorphism_pages(
 
     # Loop through each dimorphic cell type and generate a page for it
     individual_template = JINJA_ENV.get_template("dimorphism_individual.md")
+    if random_pages is not None:
+        dimorphic_meta = random.sample(dimorphic_meta, k=min(random_pages, len(dimorphic_meta)))
     for record in dimorphic_meta:
         print(
             f"  Generating summary page for type {record['type']} (dimorphic)...",
@@ -206,6 +212,8 @@ def make_dimorphism_pages(
 
     # Loop through each male-specific cell type and generate a page for it
     individual_template = JINJA_ENV.get_template("male_spec_individual.md")
+    if random_pages is not None:
+        male_meta = random.sample(male_meta, k=min(random_pages, len(male_meta)))
     for record in male_meta:
         print(
             f"  Generating summary page for type {record['type']} (male-specific)...",
@@ -256,6 +264,8 @@ def make_dimorphism_pages(
 
     # Loop through each male-specific cell type and generate a page for it
     individual_template = JINJA_ENV.get_template("female_spec_individual.md")
+    if random_pages is not None:
+        female_meta = random.sample(female_meta, k=min(random_pages, len(female_meta)))
     for record in female_meta:
         print(
             f"  Generating summary page for type {record['type']} (female-specific)...",
@@ -304,6 +314,8 @@ def make_dimorphism_pages(
 
     # Loop through each isomorphic cell type that contributes to a synonym
     individual_template = JINJA_ENV.get_template("isomorphism_individual.md")
+    if random_pages is not None:
+        by_synonyms = dict(random.sample(list(by_synonyms.items()), k=min(random_pages, len(by_synonyms))))
     for name, syn in by_synonyms.items():
         for record in syn["types_iso"]:
             print(
@@ -1205,7 +1217,8 @@ def group_by_hemilineage(
 
 
 def make_supertype_pages(
-    mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, skip_thumbnails: bool
+    mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, skip_thumbnails: bool,
+    random_pages: int | None
 ) -> None:
     """Generate the individual summaries for each (dimorphic) supertype.
 
@@ -1217,7 +1230,8 @@ def make_supertype_pages(
                 The meta data for the neurons as returned from FlyTable.
     skip_thumbnails : bool
                 Whether to skip generating thumbnails for the supertype pages.
-
+    random_pages : int or None
+                If an int is provided, generate that many random supertype pages.
     """
     print("Generating supertype pages...", flush=True)
 
@@ -1295,6 +1309,8 @@ def make_supertype_pages(
     template = JINJA_ENV.get_template("supertype_individual.md")
 
     # Loop through each super type and generate a page for it
+    if random_pages is not None:
+        supertypes_meta = random.sample(supertypes_meta, k=min(random_pages, len(supertypes_meta)))
     for record in supertypes_meta:
         print(
             f"  Generating summary page for supertype '{record['supertype']}'...",
@@ -1340,7 +1356,8 @@ def make_supertype_pages(
 
 
 def make_synonyms_pages(
-    mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, skip_thumbnails: bool
+    mcns_meta: pd.DataFrame, fw_meta: pd.DataFrame, skip_thumbnails: bool,
+    random_pages: int | None
 ) -> None:
     """Generate the individual summaries for each (dimorphic) synonym.
 
@@ -1352,7 +1369,8 @@ def make_synonyms_pages(
                 The meta data for the neurons as returned from FlyTable.
     skip_thumbnails : bool
                 Whether to skip generating thumbnails for the synonym pages.
-
+    random_pages : int or None
+                If an int is provided, generate that many random synonym pages.
     """
     print("Generating synonym pages...", flush=True)
 
@@ -1472,6 +1490,8 @@ def make_synonyms_pages(
     template = JINJA_ENV.get_template("synonym_individual.md")
 
     # Loop through each synonym and generate a page for it
+    if random_pages is not None:
+        synonyms_meta = dict(random.sample(list(synonyms_meta.items()), k=min(random_pages, len(synonyms_meta))))
     for syn, record in synonyms_meta.items():
         print(
             f"  Generating summary page for synonym '{record['name']}'...",
@@ -1501,7 +1521,7 @@ def make_synonyms_pages(
     print("Done.", flush=True)
 
 
-def make_hemilineage_pages(mcns_meta, fw_meta):
+def make_hemilineage_pages(mcns_meta, fw_meta, random_pages: int | None) -> None:
     """Generate the individual summaries for each (dimorphic) hemilineage.
 
     Parameters
@@ -1510,7 +1530,8 @@ def make_hemilineage_pages(mcns_meta, fw_meta):
                 The meta data for the neurons as returned from neuPrint.
     fw_meta :   pd.DataFrame
                 The meta data for the neurons as returned from FlyTable.
-
+    random_pages : int or None
+                If an int is provided, generate that many random hemilineage pages.
     """
     print("Generating supertype pages...", flush=True)
     # Load the template for the summary pages
@@ -1582,6 +1603,8 @@ def make_hemilineage_pages(mcns_meta, fw_meta):
     print(f"Found {len(hemilineages_meta):,} (dimorphic) supertypes.", flush=True)
 
     # Loop through each super type and generate a page for it
+    if random_pages is not None:
+        hemilineages_meta = random.sample(hemilineages_meta, k=min(random_pages, len(hemilineages_meta)))
     for record in hemilineages_meta:
         print(
             f"  Generating summary page for hemilineage '{record['hemilineage']}'...",
@@ -1927,7 +1950,8 @@ def edges2d3(edges, filepath, color=None):
     adjmat = vec2adjmat(edges.pre_type, edges.post_type, weight=edges.weight)
 
     # Initialise the graph
-    d3 = d3graph()
+    # turn off the ads!
+    d3 = d3graph(support=False)
 
     # Process adjacency matrix
     d3.graph(adjmat, color=None)
@@ -1963,6 +1987,7 @@ def clear_build_directory():
         HEMILINEAGE_DIR,
     ):
         # Remove all files in the directory
+        print("    Clearing directory:", dir, flush=True)
         for file in dir.glob("*"):
             if file.is_file():
                 file.unlink()

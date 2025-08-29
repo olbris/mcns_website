@@ -6,6 +6,7 @@ This script generates the following pages for the website:
 """
 
 import argparse
+import random
 
 from build_tools import loading, building
 
@@ -61,6 +62,22 @@ parser.add_argument(
     help="Clear the build directory before generating pages.",
 )
 
+# allow user to specify how many random pages to build for testing
+parser.add_argument(
+    "--random-pages",
+    type=int,
+    default=None,
+    help="Specify a number of random pages to build (for testing).",
+)
+
+parser.add_argument(
+    "--random-seed",
+    type=int,
+    default=283761,   # chosen by poking the keyboard
+    help="Specify a random seed for reproducibility.",
+)
+
+
 if __name__ == "__main__":
     # Load the template
     args = parser.parse_args()
@@ -81,21 +98,26 @@ if __name__ == "__main__":
         # Clear the build directory
         building.clear_build_directory()
 
+    if args.random_pages is not None:
+        if args.random_pages <= 0:
+            raise ValueError("The --random-pages argument must be a positive integer.")
+        random.seed(args.random_seed)
+
     # Generate the supertype pages
     if not args.skip_supertypes:
         building.make_supertype_pages(
-            mcns_meta, fw_meta, skip_thumbnails=args.skip_thumbnails
+            mcns_meta, fw_meta, skip_thumbnails=args.skip_thumbnails, random_pages=args.random_pages,
         )
 
     # Generate the individual synonyms pages + thumbnails
     if not args.skip_synonyms:
         building.make_synonyms_pages(
-            mcns_meta, fw_meta, skip_thumbnails=args.skip_thumbnails
+            mcns_meta, fw_meta, skip_thumbnails=args.skip_thumbnails, random_pages=args.random_pages,
         )
 
     # Generate the hemilineage pages
     if not args.skip_hemilineages:
-        building.make_hemilineage_pages(mcns_meta, fw_meta)
+        building.make_hemilineage_pages(mcns_meta, fw_meta, random_pages=args.random_pages)
 
     # Generate the dimorphism pages (overview and individual pages)
     building.make_dimorphism_pages(
@@ -106,4 +128,5 @@ if __name__ == "__main__":
         fw_roi_info,
         skip_graphs=args.skip_graphs,
         skip_thumbnails=args.skip_thumbnails,
+        random_pages=args.random_pages,
     )
