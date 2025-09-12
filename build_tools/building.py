@@ -2,13 +2,16 @@
 Functions for building the various bits and pieces of the website.
 """
 
+import functools
 import re
 import navis
 import logging
 import random
+import shutil
 import warnings
 
 import dvid as dv
+import itables
 import numpy as np
 import pandas as pd
 import octarine as oc
@@ -23,6 +26,7 @@ from concurrent.futures import as_completed
 
 from .env import (
     BUILD_DIR,
+    SITE_DIR,
     GRAPH_DIR,
     SUMMARY_TYPES_DIR,
     THUMBNAILS_DIR,
@@ -170,7 +174,15 @@ def make_dimorphism_pages(
         # Generate the graph
         if not skip_graphs:
             try:
-                generate_graphs(
+                # generate_graphs(
+                #     record["type"],
+                #     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
+                #     fw_meta[fw_meta["mapping"] == record["mapping"]],
+                #     mcns_meta,
+                #     fw_meta,
+                #     fw_edges,
+                # )
+                generate_connections_tables(
                     record["type"],
                     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
                     fw_meta[fw_meta["mapping"] == record["mapping"]],
@@ -189,10 +201,12 @@ def make_dimorphism_pages(
         record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
         record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
 
+        record["connections_file_rel"] = f"../../graphs/{record['type']}_connections.html"
+
         if not skip_thumbnails:
             # Generate the thumbnail
             try:
-                generate_thumbnail(
+                    generate_thumbnail(
                     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
                     fw_meta[fw_meta["mapping"] == record["mapping"]],
                     THUMBNAILS_DIR / f"{record['type_file']}.png",
@@ -223,7 +237,15 @@ def make_dimorphism_pages(
         # Generate the graph
         if not skip_graphs:
             try:
-                generate_graphs(
+                # generate_graphs(
+                #     record["type"],
+                #     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
+                #     pd.DataFrame(),
+                #     mcns_meta,
+                #     fw_meta,
+                #     fw_edges,
+                # )
+                generate_connections_tables(
                     record["type"],
                     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
                     pd.DataFrame(),
@@ -240,6 +262,7 @@ def make_dimorphism_pages(
             BUILD_DIR / "graphs" / (record["type"] + "_mcns.html")
         )
         record["graph_file_mcns_rel"] = f"../../graphs/{record['type']}_mcns.html"
+        record["connections_file_rel"] = f"../../graphs/{record['type']}_connections.html"
 
         if not skip_thumbnails:
             # Generate the thumbnail
@@ -275,7 +298,15 @@ def make_dimorphism_pages(
         # Generate the graph
         if not skip_graphs:
             try:
-                generate_graphs(
+                # generate_graphs(
+                #     record["type"],
+                #     pd.DataFrame(),
+                #     fw_meta[fw_meta["mapping"] == record["mapping"]],
+                #     mcns_meta,
+                #     fw_meta,
+                #     fw_edges,
+                # )
+                generate_connections_tables(
                     record["type"],
                     pd.DataFrame(),
                     fw_meta[fw_meta["mapping"] == record["mapping"]],
@@ -290,6 +321,7 @@ def make_dimorphism_pages(
 
         record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
         record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
+        record["connections_file_rel"] = f"../../graphs/{record['type']}_connections.html"
 
         if not skip_thumbnails:
             # Generate the thumbnail
@@ -1801,6 +1833,161 @@ def generate_thumbnail(
     OC_VIEWER.clear()
 
 
+def generate_connections_tables(
+    type_name: str,
+    type_meta_mcns: pd.DataFrame,
+    type_meta_fw: pd.DataFrame,
+    mcns_meta_full: pd.DataFrame,
+    fw_meta_full: pd.DataFrame,
+    fw_edges: pd.DataFrame,
+) -> None:
+    """Generate connections tables for the given neurons.
+
+    Parameters
+    ----------
+    type_name : str
+                The type of neuron to generate the table for.
+                This is primarily used for the filename as
+                the tables are generated from the meta data
+                (see below).
+    type_meta_mcns : pd.DataFrame
+                The meta data for the MCNS neurons to generate a table for.
+    type_meta_fw : pd.DataFrame
+                The meta data for the FlyWire neurons to generate a table for.
+    mcns_meta_full : pd.DataFrame
+                The full meta data for MaleCNS. We need this to assign types
+                to synaptic partners.
+    fw_meta_full : pd.DataFrame
+                The full meta data for FlyWire. We need this to assign types
+                to synaptic partners.
+    fw_edges :  pd.DataFrame
+                The edges for the FlyWire neurons. See
+                loading.py for the function that loads this data.
+
+    Returns
+    -------
+    None
+                The tables will be written to `GRAPH_DIR / f"{type_name}_connections.html"`.
+
+    """
+    print(f"  Generating connections table for {type_name}...", flush=True)
+
+    mcns_mapping = mcns_meta_full.set_index("bodyId").mapping.to_dict()
+    fw_mapping = fw_meta_full.set_index("root_id").mapping.to_dict()
+    fw_meta_full = fw_meta_full.drop_duplicates("root_id")
+    fw_edges = fw_edges.rename(columns={"syn_count": "weight"})
+
+    # MCNS neurons
+    if not type_meta_mcns.empty:
+        df_mcns = get_mcns_connections(type_meta_mcns, mcns_mapping)
+        mcns_connections = _split_reformat_connections(df_mcns, type_name)
+        mcns_connections = add_nt_cns(mcns_connections, mcns_meta_full)
+        mcns_connections["source"] = "CNS(M)"
+    else:
+        mcns_connections = pd.DataFrame()
+
+    # FlyWire
+    if not type_meta_fw.empty:
+        df_fw = get_fw_connections(type_meta_fw, fw_edges, fw_mapping)
+        fw_connections = _split_reformat_connections(df_fw, type_name)
+        fw_connections = add_nt_fw(fw_connections, fw_meta_full)
+        fw_connections["source"] = "FlyWire(F)"
+    else:
+        fw_connections = pd.DataFrame()
+
+    # create the table; handle possibly not having one or the other df
+
+    # for now, assume we have both, and do the easy case:
+    connections = pd.concat([mcns_connections, fw_connections], ignore_index=True)
+
+
+    if len(connections) == 0:
+        print(f"  No connections found for {type_name}, skipping...", flush=True)
+    else:
+        print(f"  Found {len(connections)} connections for {type_name}")
+
+    # and save the actual table:
+    create_connection_table(connections, GRAPH_DIR / f"{type_name}_connections.html")
+
+
+def get_fw_connections(type_meta_fw: pd.DataFrame, fw_edges: pd.DataFrame, fw_mapping):
+    # Subset the edges to the ones that are in the meta data
+    down = fw_edges[
+        fw_edges.pre_pt_root_id.isin(type_meta_fw["root_id"].values)
+    ].copy()
+    up = fw_edges[
+        fw_edges.post_pt_root_id.isin(type_meta_fw["root_id"].values)
+    ].copy()
+
+    # Add type information
+    down["pre_type"] = down.pre_pt_root_id.map(fw_mapping)
+    down["post_type"] = down.post_pt_root_id.map(fw_mapping)
+    up["pre_type"] = up.pre_pt_root_id.map(fw_mapping)
+    up["post_type"] = up.post_pt_root_id.map(fw_mapping)
+
+    # Group by pre- and post-synaptic types
+    down = (
+        down.groupby(["pre_type", "post_type"], as_index=False)
+        .weight.sum()
+        .sort_values("weight", ascending=False)
+    )
+    up = (
+        up.groupby(["pre_type", "post_type"], as_index=False)
+        .weight.sum()
+        .sort_values("weight", ascending=False)
+    )
+    # Remove self-loops
+    up = up[(up.pre_type != up.post_type)]
+    down = down[(down.pre_type != down.post_type)]
+    # Remove unknown types
+    up = up[up.pre_type.notnull() & up.post_type.notnull()]
+    down = down[down.pre_type.notnull() & down.post_type.notnull()]
+
+    # Combine
+    return pd.concat([down, up], axis=0).drop_duplicates().reset_index(drop=True)
+
+
+def get_mcns_connections(type_meta_mcns: pd.DataFrame, mcns_mapping):
+    # Fetch downstream partners (ignore userwarnings)
+    with warnings.catch_warnings(action="ignore"):
+        ann, down = neu.fetch_adjacencies(
+            sources=neu.NeuronCriteria(bodyId=type_meta_mcns["bodyId"].values),
+        )
+
+    # Add type information
+    down["pre_type"] = down.bodyId_pre.map(mcns_mapping)
+    down["post_type"] = down.bodyId_post.map(mcns_mapping)
+
+    # Group by pre- and post-synaptic types
+    down = (
+        down.groupby(["pre_type", "post_type"], as_index=False)
+        .weight.sum()
+        .sort_values("weight", ascending=False)
+    )
+    # Remove self-loops
+    down = down[down.pre_type != down.post_type]
+    # Remove unknown types
+    down = down[down.pre_type.notnull() & down.post_type.notnull()]
+
+    # Same for upstream partners
+    with warnings.catch_warnings(action="ignore"):
+        ann, up = neu.fetch_adjacencies(
+            targets=neu.NeuronCriteria(bodyId=type_meta_mcns["bodyId"].values),
+        )
+    up["pre_type"] = up.bodyId_pre.map(mcns_mapping)
+    up["post_type"] = up.bodyId_post.map(mcns_mapping)
+    up = (
+        up.groupby(["pre_type", "post_type"], as_index=False)
+        .weight.sum()
+        .sort_values("weight", ascending=False)
+    )
+    up = up[up.pre_type != up.post_type]
+    up = up[up.pre_type.notnull() & up.post_type.notnull()]
+
+    # Combine but keep only the top N in- and out-edges
+    return pd.concat([down, up], axis=0).drop_duplicates().reset_index(drop=True)
+
+
 def generate_graphs(
     type_name: str,
     type_meta_mcns: pd.DataFrame,
@@ -1854,92 +2041,14 @@ def generate_graphs(
 
     # First up: graph for the MCNS neurons
     if not type_meta_mcns.empty:
-        # Fetch downstream partners (ignore userwarnings)
-        with warnings.catch_warnings(action="ignore"):
-            ann, down = neu.fetch_adjacencies(
-                sources=neu.NeuronCriteria(bodyId=type_meta_mcns["bodyId"].values),
-            )
-
-        # Add type information
-        down["pre_type"] = down.bodyId_pre.map(mcns_mapping)
-        down["post_type"] = down.bodyId_post.map(mcns_mapping)
-
-        # Group by pre- and post-synaptic types
-        down = (
-            down.groupby(["pre_type", "post_type"], as_index=False)
-            .weight.sum()
-            .sort_values("weight", ascending=False)
-        )
-        # Remove self-loops
-        down = down[down.pre_type != down.post_type]
-        # Remove unknown types
-        down = down[down.pre_type.notnull() & down.post_type.notnull()]
-
-        # Same for upstream partners
-        with warnings.catch_warnings(action="ignore"):
-            ann, up = neu.fetch_adjacencies(
-                targets=neu.NeuronCriteria(bodyId=type_meta_mcns["bodyId"].values),
-            )
-        up["pre_type"] = up.bodyId_pre.map(mcns_mapping)
-        up["post_type"] = up.bodyId_post.map(mcns_mapping)
-        up = (
-            up.groupby(["pre_type", "post_type"], as_index=False)
-            .weight.sum()
-            .sort_values("weight", ascending=False)
-        )
-        up = up[up.pre_type != up.post_type]
-        up = up[up.pre_type.notnull() & up.post_type.notnull()]
-
-        # Combine but keep only the top N in- and out-edges
-        df = (
-            pd.concat([down.iloc[:N], up.iloc[:N]], axis=0)
-            .drop_duplicates()
-            .reset_index(drop=True)
-        )
+        df = get_mcns_connections(type_meta_mcns, mcns_mapping, N)
 
         # Generate the D3 graph
         edges2d3(df, GRAPH_DIR / f"{type_name}_mcns.html", color="#00ffff")
 
     # Now do the same for FlyWire
     if not type_meta_fw.empty:
-        # Subset the edges to the ones that are in the meta data
-        down = fw_edges[
-            fw_edges.pre_pt_root_id.isin(type_meta_fw["root_id"].values)
-        ].copy()
-        up = fw_edges[
-            fw_edges.post_pt_root_id.isin(type_meta_fw["root_id"].values)
-        ].copy()
-
-        # Add type information
-        down["pre_type"] = down.pre_pt_root_id.map(fw_mapping)
-        down["post_type"] = down.post_pt_root_id.map(fw_mapping)
-        up["pre_type"] = up.pre_pt_root_id.map(fw_mapping)
-        up["post_type"] = up.post_pt_root_id.map(fw_mapping)
-
-        # Group by pre- and post-synaptic types
-        down = (
-            down.groupby(["pre_type", "post_type"], as_index=False)
-            .weight.sum()
-            .sort_values("weight", ascending=False)
-        )
-        up = (
-            up.groupby(["pre_type", "post_type"], as_index=False)
-            .weight.sum()
-            .sort_values("weight", ascending=False)
-        )
-        # Remove self-loops
-        up = up[(up.pre_type != up.post_type)]
-        down = down[(down.pre_type != down.post_type)]
-        # Remove unknown types
-        up = up[up.pre_type.notnull() & up.post_type.notnull()]
-        down = down[down.pre_type.notnull() & down.post_type.notnull()]
-
-        # Combine but keep only the top N in- and out-edges
-        df = (
-            pd.concat([down.iloc[:N], up.iloc[:N]], axis=0)
-            .drop_duplicates()
-            .reset_index(drop=True)
-        )
+        df = get_fw_connections(type_meta_fw, fw_edges, fw_mapping, N)
 
         # Generate the D3 graph
         edges2d3(df, GRAPH_DIR / f"{type_name}_fw.html", color="#ff00ff")
@@ -1987,12 +2096,20 @@ def clear_build_directory():
         HEMILINEAGE_DIR,
     ):
         # Remove all files in the directory
-        print("    Clearing directory:", dir, flush=True)
+        print("    Clearing build directory:", dir, flush=True)
         for file in dir.glob("*"):
             if file.is_file():
                 file.unlink()
 
     print("Cleared the build directory.", flush=True)
+
+
+def clear_site_directory():
+    """Clear the site directory"""
+    if SITE_DIR.exists() and SITE_DIR.is_dir():
+         print("Clearing site directory...", flush=True)
+         shutil.rmtree(SITE_DIR)
+         print("Cleared site directory.", flush=True)
 
 
 def prep_scene(table):
@@ -2057,3 +2174,99 @@ def _get_ids_from_record(record):
             root_ids = np.array([record["root_id"]], dtype=int)
 
     return body_ids, root_ids
+
+def _split_reformat_connections(df, type_name):
+    pre_df = pd.DataFrame()
+    pre_df["type"] = df.query("pre_type == @type_name").post_type
+    pre_df["weight"] = df.query("pre_type == @type_name").weight
+    pre_df["pre-post"] = "pre"
+
+    post_df = pd.DataFrame()
+    post_df["type"] = df.query("post_type == @type_name").pre_type
+    post_df["weight"] = df.query("post_type == @type_name").weight
+    post_df["pre-post"] = "post"
+
+    total = pre_df.weight.sum()
+    pre_df["percent"] = pre_df.weight / total
+    pre_df["cumulative"] = pre_df.percent.cumsum()
+
+    total = post_df.weight.sum()
+    post_df["percent"] = post_df.weight / total
+    post_df["cumulative"] = post_df.percent.cumsum()
+
+    return pd.concat([pre_df, post_df])
+
+def add_nt_cns(df, mcns_meta):
+    # add nt column to MCNS connections table
+    def f(items):
+        temp = [item for item in items if pd.notna(item)]
+        if temp:
+            return ','.join(set(temp))
+        else:
+            return ""
+    nt_df = mcns_meta.groupby("type", dropna=True)["consensusNt"].apply(f).reset_index()
+    df = df.merge(nt_df, how='left', on="type")
+    df["consensusNt"] = df["consensusNt"].fillna("")
+    df = df.rename(columns={"consensusNt": "nt"})
+    return df
+
+def add_nt_fw(df, fw_meta):
+    # add nt column to FlyWire connections table
+    def f(items):
+        temp = [item for item in items if pd.notna(item)]
+        if temp:
+            return ','.join(set(temp))
+        else:
+            return ""
+    nt_df = fw_meta.groupby("type", dropna=True)["top_nt"].apply(f).reset_index()
+    df = df.merge(nt_df, how='left', on="type")
+    df["top_nt"] = df["top_nt"].fillna("")
+    df = df.rename(columns={"top_nt": "nt"})
+    return df
+
+@functools.cache
+def get_itables_common_html():
+    return itables.javascript.generate_init_offline_itables_html(itables.options.dt_bundle)
+
+def create_connection_table(df, filepath):
+    # reorder the columns
+    df = df[["type", "source", "pre-post", "nt", "weight", "percent", "cumulative"]]
+
+    # M/F specific cells don't need to filter on the "source" column
+    if df['source'].nunique() == 1:
+        filter_columns = [2, 3]
+        filter_layout = "columns-2"
+    else:
+        filter_columns = [1, 2, 3]
+        filter_layout = "columns-3"
+
+    common_html = get_itables_common_html()
+
+    # can factor this styling out at some point
+    format_dict = {
+        "weight": '{:,.0f}',
+        "percent": '{:,.1%}',
+        "cumulative": '{:,.1%}',
+    }
+
+    def apply_styling(styler):
+        styler.format(format_dict)
+        styler.bar(color="#fee395", subset=['percent'], vmax=1, height=95)
+        styler.bar(color="#fed76a", subset=['cumulative'], height=95)
+        return styler
+
+    html = itables.to_html_datatable(df.style.pipe(apply_styling),
+        connected=False,
+        allow_html=True,
+        pageLength=100,
+        lengthMenu=[10, 25, 50, 100, 250, 500],
+        layout={"top1": "searchPanes"},
+        searchPanes={"layout": filter_layout, "cascadePanes": True, "columns": filter_columns},
+        )
+
+    with open(filepath, 'wt') as f:
+        f.write(f"{html}\n{common_html}")
+
+
+
+

@@ -134,13 +134,6 @@ tags:
 
 <div style="display: flex; align-items: center; gap: 8px;">
     <h2>Connectivity</h2>
-    <div style="position: relative; display: inline-block;">
-        <button style="background-color: transparent; border: none; cursor: pointer; font-size: 16px; color: #0078D4;">&#x3F;</button>
-        <div style="visibility: hidden; width: 200px; background-color: #f9f9f9; color: #333; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; transform: translateX(-50%); box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
-            The graphs below show the 5 strongest up- and downstream partners for {{ meta.type}}. Click on the link icons to view the full connectivity in neuPrint.
-            <div style="position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #f9f9f9 transparent transparent transparent;"></div>
-        </div>
-    </div>
 </div>
 
 <!-- script for tooltips -->
@@ -156,10 +149,7 @@ tags:
 </script>
 
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px;">
-    <div style="flex: 1; min-width: 300px; text-align: center;">
-        <h4>MaleCNS<a href="{{ meta.neuprint_conn_url }}" target="_blank"> <i class="fa fa-external-link"></i></a></h4>
-        <embed type="text/html" src="{{ meta.graph_file_mcns_rel }}" width="100%" height="500px" style="border:none;"></embed>
-    </div>
+    <embed type="text/html" src="{{ meta.connections_file_rel }}" width="100%" height="4000px" style="border:none;"></embed>
 </div>
 
 

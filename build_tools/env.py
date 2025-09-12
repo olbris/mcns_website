@@ -80,6 +80,9 @@ SUPERTYPE_DIR = BUILD_DIR / "supertypes"
 HEMILINEAGE_DIR = BUILD_DIR / "hemilineages"
 SYNONYMS_DIR = BUILD_DIR / "synonyms"
 
+# Directory for the final HTML files
+SITE_DIR = REPO_BASE_PATH / "site"
+
 # Directory for the some cached data (use the --update-metadata flag to trigger a refresh)
 CACHE_DIR = REPO_BASE_PATH / ".cache"
 MCNS_META_DATA_CACHE = CACHE_DIR / "mcns_meta_data.feather"

@@ -61,6 +61,11 @@ parser.add_argument(
     action="store_true",
     help="Clear the build directory before generating pages.",
 )
+parser.add_argument(
+    "--clear-site",
+    action="store_true",
+    help="Clear the site directory before generating pages.",
+)
 
 # allow user to specify how many random pages to build for testing
 parser.add_argument(
@@ -97,6 +102,10 @@ if __name__ == "__main__":
     if args.clear_build:
         # Clear the build directory
         building.clear_build_directory()
+
+    if args.clear_site:
+        # Clear the site directory
+        building.clear_site_directory()
 
     if args.random_pages is not None:
         if args.random_pages <= 0:
