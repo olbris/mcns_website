@@ -42,6 +42,11 @@ parser.add_argument(
     help="Skip the generation of networks graphs.",
 )
 parser.add_argument(
+    "--skip-tables",
+    action="store_true",
+    help="Skip the generation of connectivity tables.",
+)
+parser.add_argument(
     "--skip-supertypes",
     action="store_true",
     help="Skip the generation of summary pages for supertypes.",
@@ -137,5 +142,6 @@ if __name__ == "__main__":
         fw_roi_info,
         skip_graphs=args.skip_graphs,
         skip_thumbnails=args.skip_thumbnails,
+        skip_tables=args.skip_tables,
         random_pages=args.random_pages,
     )

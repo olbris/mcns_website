@@ -71,6 +71,7 @@ def make_dimorphism_pages(
     fw_roi_info: pd.DataFrame,
     skip_graphs: bool = False,
     skip_thumbnails: bool = False,
+    skip_tables: bool = False,
     random_pages: int = None,
 ) -> None:
     """Generate the overview page and individual summaries for each dimorphic cell type.
@@ -92,6 +93,8 @@ def make_dimorphism_pages(
                 If True, skip generating the graphs for the neurons.
     skip_thumbnails : bool
                 If True, skip generating the thumbnails for the neurons.
+    skip_tables : bool
+                If True, skip generating the connections tables for the neurons.
     random_pages : int or None
                 If an int is provided, generate this many random pages.
 
@@ -174,15 +177,7 @@ def make_dimorphism_pages(
         # Generate the graph
         if not skip_graphs:
             try:
-                # generate_graphs(
-                #     record["type"],
-                #     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
-                #     fw_meta[fw_meta["mapping"] == record["mapping"]],
-                #     mcns_meta,
-                #     fw_meta,
-                #     fw_edges,
-                # )
-                generate_connections_tables(
+                generate_graphs(
                     record["type"],
                     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
                     fw_meta[fw_meta["mapping"] == record["mapping"]],
@@ -201,6 +196,16 @@ def make_dimorphism_pages(
         record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
         record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
 
+        if not skip_tables:
+            try:
+                generate_connections_tables(
+                    record,
+                    mcns_meta,
+                    fw_meta,
+                    fw_edges,
+                    )
+            except Exception as e:
+                print(f"  Failed to generate connections table for {record['type']}: {e}", flush=True)
         record["connections_file_rel"] = f"../../graphs/{record['type']}_connections.html"
 
         if not skip_thumbnails:
@@ -237,15 +242,7 @@ def make_dimorphism_pages(
         # Generate the graph
         if not skip_graphs:
             try:
-                # generate_graphs(
-                #     record["type"],
-                #     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
-                #     pd.DataFrame(),
-                #     mcns_meta,
-                #     fw_meta,
-                #     fw_edges,
-                # )
-                generate_connections_tables(
+                generate_graphs(
                     record["type"],
                     mcns_meta[mcns_meta["mapping"] == record["mapping"]],
                     pd.DataFrame(),
@@ -262,6 +259,17 @@ def make_dimorphism_pages(
             BUILD_DIR / "graphs" / (record["type"] + "_mcns.html")
         )
         record["graph_file_mcns_rel"] = f"../../graphs/{record['type']}_mcns.html"
+
+        if not skip_tables:
+            try:
+                generate_connections_tables(
+                    record,
+                    mcns_meta,
+                    fw_meta,
+                    fw_edges,
+                    )
+            except Exception as e:
+                print(f"  Failed to generate connections table for {record['type']}: {e}", flush=True)
         record["connections_file_rel"] = f"../../graphs/{record['type']}_connections.html"
 
         if not skip_thumbnails:
@@ -298,15 +306,7 @@ def make_dimorphism_pages(
         # Generate the graph
         if not skip_graphs:
             try:
-                # generate_graphs(
-                #     record["type"],
-                #     pd.DataFrame(),
-                #     fw_meta[fw_meta["mapping"] == record["mapping"]],
-                #     mcns_meta,
-                #     fw_meta,
-                #     fw_edges,
-                # )
-                generate_connections_tables(
+                generate_graphs(
                     record["type"],
                     pd.DataFrame(),
                     fw_meta[fw_meta["mapping"] == record["mapping"]],
@@ -321,6 +321,17 @@ def make_dimorphism_pages(
 
         record["graph_file_fw"] = BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
         record["graph_file_fw_rel"] = f"../../graphs/{record['type']}_fw.html"
+
+        if not skip_tables:
+            try:
+                generate_connections_tables(
+                    record,
+                    mcns_meta,
+                    fw_meta,
+                    fw_edges,
+                    )
+            except Exception as e:
+                print(f"  Failed to generate connections table for {record['type']}: {e}", flush=True)
         record["connections_file_rel"] = f"../../graphs/{record['type']}_connections.html"
 
         if not skip_thumbnails:
@@ -356,20 +367,20 @@ def make_dimorphism_pages(
             )
 
             # Generate the graph
-            # if not skip_graphs:
-            #     try:
-            #         generate_graphs(
-            #             record["type"],
-            #             pd.DataFrame(),
-            #             fw_meta[fw_meta["mapping"] == record["mapping"]],
-            #             mcns_meta,
-            #             fw_meta,
-            #             fw_edges,
-            #         )
-            #     except Exception as e:
-            #         print(
-            #             f"  Failed to generate graph for {record['type']}: {e}", flush=True
-            #         )
+            if not skip_graphs:
+                try:
+                    generate_graphs(
+                        record["type"],
+                        pd.DataFrame(),
+                        fw_meta[fw_meta["mapping"] == record["mapping"]],
+                        mcns_meta,
+                        fw_meta,
+                        fw_edges,
+                    )
+                except Exception as e:
+                    print(
+                        f"  Failed to generate graph for {record['type']}: {e}", flush=True
+                    )
 
             record["graph_file_fw"] = (
                 BUILD_DIR / "graphs" / (record["type"] + "_fw.html")
@@ -1834,9 +1845,7 @@ def generate_thumbnail(
 
 
 def generate_connections_tables(
-    type_name: str,
-    type_meta_mcns: pd.DataFrame,
-    type_meta_fw: pd.DataFrame,
+    record: dict,
     mcns_meta_full: pd.DataFrame,
     fw_meta_full: pd.DataFrame,
     fw_edges: pd.DataFrame,
@@ -1845,15 +1854,8 @@ def generate_connections_tables(
 
     Parameters
     ----------
-    type_name : str
-                The type of neuron to generate the table for.
-                This is primarily used for the filename as
-                the tables are generated from the meta data
-                (see below).
-    type_meta_mcns : pd.DataFrame
-                The meta data for the MCNS neurons to generate a table for.
-    type_meta_fw : pd.DataFrame
-                The meta data for the FlyWire neurons to generate a table for.
+    record : dict
+                The dictionary of metadata for this particular type
     mcns_meta_full : pd.DataFrame
                 The full meta data for MaleCNS. We need this to assign types
                 to synaptic partners.
@@ -1870,7 +1872,13 @@ def generate_connections_tables(
                 The tables will be written to `GRAPH_DIR / f"{type_name}_connections.html"`.
 
     """
+    type_name = record["type"]
+    mapping_name = record["mapping"]
+
     print(f"  Generating connections table for {type_name}...", flush=True)
+
+    type_meta_mcns = mcns_meta_full[mcns_meta_full["mapping"] == mapping_name]
+    type_meta_fw = fw_meta_full[fw_meta_full["mapping"] == mapping_name]
 
     mcns_mapping = mcns_meta_full.set_index("bodyId").mapping.to_dict()
     fw_mapping = fw_meta_full.set_index("root_id").mapping.to_dict()
@@ -1880,7 +1888,7 @@ def generate_connections_tables(
     # MCNS neurons
     if not type_meta_mcns.empty:
         df_mcns = get_mcns_connections(type_meta_mcns, mcns_mapping)
-        mcns_connections = _split_reformat_connections(df_mcns, type_name)
+        mcns_connections = _split_reformat_connections(df_mcns, mapping_name)
         mcns_connections = add_nt_cns(mcns_connections, mcns_meta_full)
         mcns_connections["source"] = "CNS(M)"
     else:
@@ -1889,7 +1897,7 @@ def generate_connections_tables(
     # FlyWire
     if not type_meta_fw.empty:
         df_fw = get_fw_connections(type_meta_fw, fw_edges, fw_mapping)
-        fw_connections = _split_reformat_connections(df_fw, type_name)
+        fw_connections = _split_reformat_connections(df_fw, mapping_name)
         fw_connections = add_nt_fw(fw_connections, fw_meta_full)
         fw_connections["source"] = "FlyWire(F)"
     else:
@@ -2175,15 +2183,15 @@ def _get_ids_from_record(record):
 
     return body_ids, root_ids
 
-def _split_reformat_connections(df, type_name):
+def _split_reformat_connections(df, mapping_name):
     pre_df = pd.DataFrame()
-    pre_df["type"] = df.query("pre_type == @type_name").post_type
-    pre_df["weight"] = df.query("pre_type == @type_name").weight
+    pre_df["type"] = df.query("pre_type == @mapping_name").post_type
+    pre_df["weight"] = df.query("pre_type == @mapping_name").weight
     pre_df["pre-post"] = "pre"
 
     post_df = pd.DataFrame()
-    post_df["type"] = df.query("post_type == @type_name").pre_type
-    post_df["weight"] = df.query("post_type == @type_name").weight
+    post_df["type"] = df.query("post_type == @mapping_name").pre_type
+    post_df["weight"] = df.query("post_type == @mapping_name").weight
     post_df["pre-post"] = "post"
 
     total = pre_df.weight.sum()
@@ -2253,6 +2261,18 @@ def create_connection_table(df, filepath):
         styler.format(format_dict)
         styler.bar(color="#fee395", subset=['percent'], vmax=1, height=95)
         styler.bar(color="#fed76a", subset=['cumulative'], height=95)
+
+        # you can get a lot more detailed and specific with this
+        # (in progress, not fully working)
+        # styler.set_table_styles(
+        #     [
+        #         # the main connections table
+        #         {"selector": "table",
+        #          "props": [("font-family", "sans-serif"), ("font-size", "16px")]},
+        #
+        #     ]
+        # )
+
         return styler
 
     html = itables.to_html_datatable(df.style.pipe(apply_styling),
