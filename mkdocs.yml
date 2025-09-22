@@ -1,7 +1,9 @@
 site_name: MaleCNS connectome
 site_description: Project website for the MaleCNS connectome
 site_url: https://mydomain.org/mysite
-copyright: Copyright &copy; 2025 Janelia Research Campus
+copyright: Copyright &copy; 2025, Howard Hughes Medical Institute
+
+
 
 plugins:
   - tags

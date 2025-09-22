@@ -62,3 +62,6 @@ icon: material/home
 
 </div>
 
+<div style="text-align: center;">
+    <p>The Male CNS is <a href="https://creativecommons.org/licenses/by/4.0/">licensed under CC-BY</a>.</p>
+</div>
