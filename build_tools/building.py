@@ -1890,7 +1890,7 @@ def generate_connections_tables(
         df_mcns = get_mcns_connections(type_meta_mcns, mcns_mapping)
         mcns_connections = _split_reformat_connections(df_mcns, mapping_name)
         mcns_connections = add_nt_cns(mcns_connections, mcns_meta_full)
-        mcns_connections["source"] = "CNS(M)"
+        mcns_connections["source"] = "CNS (M)"
     else:
         mcns_connections = pd.DataFrame()
 
@@ -1899,7 +1899,7 @@ def generate_connections_tables(
         df_fw = get_fw_connections(type_meta_fw, fw_edges, fw_mapping)
         fw_connections = _split_reformat_connections(df_fw, mapping_name)
         fw_connections = add_nt_fw(fw_connections, fw_meta_full)
-        fw_connections["source"] = "FlyWire(F)"
+        fw_connections["source"] = "FlyWire (F)"
     else:
         fw_connections = pd.DataFrame()
 
@@ -2262,6 +2262,14 @@ def create_connection_table(df, filepath):
     # reorder the columns
     df = df[["type", "source", "pre-post", "nt", "count", "weight", "percent", "cumulative"]]
 
+    # final name adjustment:
+    df = df.rename(columns={
+        "pre-post": "pre/post",
+        "percent": "% of total",
+        "cumulative": "cumulative %",
+    })
+
+
     # M/F specific cells don't need to filter on the "source" column
     if df['source'].nunique() == 1:
         filter_columns = [2, 3]
@@ -2276,14 +2284,18 @@ def create_connection_table(df, filepath):
     format_dict = {
         "weight": '{:,.0f}',
         "count": '{:,.0f}',
-        "percent": '{:,.1%}',
-        "cumulative": '{:,.1%}',
+        "% of total": '{:,.1%}',
+        "cumulative %": '{:,.1%}',
     }
 
     def apply_styling(styler):
         styler.format(format_dict)
-        styler.bar(color="#fee395", subset=['percent'], vmax=1, height=95)
-        styler.bar(color="#fed76a", subset=['cumulative'], height=95)
+        # OL input colors:
+        # styler.bar(color="#fee395", subset=['% of total'], vmax=1, height=95)
+        # styler.bar(color="#fed76a", subset=['cumulative %'], height=95)
+        # OL output colors:
+        styler.bar(color="#69d0e4", subset=['% of total'], vmax=1, height=95)
+        styler.bar(color="#9bdfed", subset=['cumulative %'], height=95)
 
         # you can get a lot more detailed and specific with this
         # (in progress, not fully working)
