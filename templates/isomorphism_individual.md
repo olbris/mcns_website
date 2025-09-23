@@ -144,7 +144,7 @@ tags:
 
 <div style="align-items: center; gap: 8px;">
     <h2>Connectivity</h2>
-    <p style="text-align: left; margin-top: 10px;"><b>Note:</b> In the table below, synapse weight percentage and cumulative percentage is calculated per source and for input and output (pre/post) separately.</p> 
+    <p style="text-align: left; margin-top: 10px;"><b>Note:</b> In the table below, cell count, synapse weight percentage, and cumulative percentage are calculated per source and for input and output (pre/post) separately.</p> 
 </div>
 
 <!-- script for tooltips -->

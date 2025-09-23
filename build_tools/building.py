@@ -1933,6 +1933,13 @@ def get_fw_connections(type_meta_fw: pd.DataFrame, fw_edges: pd.DataFrame, fw_ma
     up["pre_type"] = up.pre_pt_root_id.map(fw_mapping)
     up["post_type"] = up.post_pt_root_id.map(fw_mapping)
 
+    # get cell counts
+    down_counts = down.groupby(["post_type"]).post_pt_root_id.nunique().reset_index()
+    down_counts = down_counts.rename(columns={"post_pt_root_id": "count"})
+
+    up_counts = up.groupby(["pre_type"]).pre_pt_root_id.nunique().reset_index()
+    up_counts = up_counts.rename(columns={"pre_pt_root_id": "count"})
+
     # Group by pre- and post-synaptic types
     down = (
         down.groupby(["pre_type", "post_type"], as_index=False)
@@ -1951,6 +1958,9 @@ def get_fw_connections(type_meta_fw: pd.DataFrame, fw_edges: pd.DataFrame, fw_ma
     up = up[up.pre_type.notnull() & up.post_type.notnull()]
     down = down[down.pre_type.notnull() & down.post_type.notnull()]
 
+    down = down.merge(down_counts)
+    up = up.merge(up_counts)
+
     # Combine
     return pd.concat([down, up], axis=0).drop_duplicates().reset_index(drop=True)
 
@@ -1966,6 +1976,10 @@ def get_mcns_connections(type_meta_mcns: pd.DataFrame, mcns_mapping):
     down["pre_type"] = down.bodyId_pre.map(mcns_mapping)
     down["post_type"] = down.bodyId_post.map(mcns_mapping)
 
+    # get cell counts
+    down_counts = down.groupby(["post_type"]).bodyId_post.nunique().reset_index()
+    down_counts = down_counts.rename(columns={"bodyId_post": "count"})
+
     # Group by pre- and post-synaptic types
     down = (
         down.groupby(["pre_type", "post_type"], as_index=False)
@@ -1977,6 +1991,8 @@ def get_mcns_connections(type_meta_mcns: pd.DataFrame, mcns_mapping):
     # Remove unknown types
     down = down[down.pre_type.notnull() & down.post_type.notnull()]
 
+    down = down.merge(down_counts)
+
     # Same for upstream partners
     with warnings.catch_warnings(action="ignore"):
         ann, up = neu.fetch_adjacencies(
@@ -1984,6 +2000,11 @@ def get_mcns_connections(type_meta_mcns: pd.DataFrame, mcns_mapping):
         )
     up["pre_type"] = up.bodyId_pre.map(mcns_mapping)
     up["post_type"] = up.bodyId_post.map(mcns_mapping)
+
+    # count cells
+    up_counts = up.groupby(["pre_type"]).bodyId_pre.nunique().reset_index()
+    up_counts = up_counts.rename(columns={"bodyId_pre": "count"})
+
     up = (
         up.groupby(["pre_type", "post_type"], as_index=False)
         .weight.sum()
@@ -1991,6 +2012,8 @@ def get_mcns_connections(type_meta_mcns: pd.DataFrame, mcns_mapping):
     )
     up = up[up.pre_type != up.post_type]
     up = up[up.pre_type.notnull() & up.post_type.notnull()]
+
+    up = up.merge(up_counts)
 
     # Combine but keep only the top N in- and out-edges
     return pd.concat([down, up], axis=0).drop_duplicates().reset_index(drop=True)
@@ -2003,7 +2026,6 @@ def generate_graphs(
     mcns_meta_full: pd.DataFrame,
     fw_meta_full: pd.DataFrame,
     fw_edges: pd.DataFrame,
-    N: int = 5,
 ) -> None:
     """Generate D3 graphs for the given neurons.
 
@@ -2027,8 +2049,6 @@ def generate_graphs(
     fw_edges :  pd.DataFrame
                 The edges for the FlyWire neurons. See
                 loading.py for the function that loads this data.
-    N :         int
-                The number of top N in- and out-edges to keep.
 
     Returns
     -------
@@ -2049,14 +2069,14 @@ def generate_graphs(
 
     # First up: graph for the MCNS neurons
     if not type_meta_mcns.empty:
-        df = get_mcns_connections(type_meta_mcns, mcns_mapping, N)
+        df = get_mcns_connections(type_meta_mcns, mcns_mapping)
 
         # Generate the D3 graph
         edges2d3(df, GRAPH_DIR / f"{type_name}_mcns.html", color="#00ffff")
 
     # Now do the same for FlyWire
     if not type_meta_fw.empty:
-        df = get_fw_connections(type_meta_fw, fw_edges, fw_mapping, N)
+        df = get_fw_connections(type_meta_fw, fw_edges, fw_mapping)
 
         # Generate the D3 graph
         edges2d3(df, GRAPH_DIR / f"{type_name}_fw.html", color="#ff00ff")
@@ -2185,13 +2205,15 @@ def _get_ids_from_record(record):
 
 def _split_reformat_connections(df, mapping_name):
     pre_df = pd.DataFrame()
-    pre_df["type"] = df.query("pre_type == @mapping_name").post_type
-    pre_df["weight"] = df.query("pre_type == @mapping_name").weight
+    pre_df["type"] = df.query("pre_type == @mapping_name")["post_type"]
+    pre_df["count"] = df.query("pre_type == @mapping_name")["count"]
+    pre_df["weight"] = df.query("pre_type == @mapping_name")["weight"]
     pre_df["pre-post"] = "pre"
 
     post_df = pd.DataFrame()
-    post_df["type"] = df.query("post_type == @mapping_name").pre_type
-    post_df["weight"] = df.query("post_type == @mapping_name").weight
+    post_df["type"] = df.query("post_type == @mapping_name")["pre_type"]
+    post_df["count"] = df.query("post_type == @mapping_name")["count"]
+    post_df["weight"] = df.query("post_type == @mapping_name")["weight"]
     post_df["pre-post"] = "post"
 
     total = pre_df.weight.sum()
@@ -2238,7 +2260,7 @@ def get_itables_common_html():
 
 def create_connection_table(df, filepath):
     # reorder the columns
-    df = df[["type", "source", "pre-post", "nt", "weight", "percent", "cumulative"]]
+    df = df[["type", "source", "pre-post", "nt", "count", "weight", "percent", "cumulative"]]
 
     # M/F specific cells don't need to filter on the "source" column
     if df['source'].nunique() == 1:
@@ -2253,6 +2275,7 @@ def create_connection_table(df, filepath):
     # can factor this styling out at some point
     format_dict = {
         "weight": '{:,.0f}',
+        "count": '{:,.0f}',
         "percent": '{:,.1%}',
         "cumulative": '{:,.1%}',
     }
