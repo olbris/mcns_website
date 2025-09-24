@@ -39,6 +39,8 @@ parser.add_argument(
 parser.add_argument(
     "--skip-graphs",
     action="store_true",
+    # we're not using graphs anymore; use --no-skip-graphs if you want them
+    default=True,
     help="Skip the generation of networks graphs.",
 )
 parser.add_argument(

@@ -28,6 +28,7 @@ from .env import (
     BUILD_DIR,
     SITE_DIR,
     GRAPH_DIR,
+    TABLES_DIR,
     SUMMARY_TYPES_DIR,
     THUMBNAILS_DIR,
     SUPERTYPE_DIR,
@@ -1869,7 +1870,7 @@ def generate_connections_tables(
     Returns
     -------
     None
-                The tables will be written to `GRAPH_DIR / f"{type_name}_connections.html"`.
+                The tables will be written to `TABLES_DIR / f"{type_name}_connections.html"`.
 
     """
     type_name = record["type"]
@@ -1915,7 +1916,7 @@ def generate_connections_tables(
         print(f"  Found {len(connections)} connections for {type_name}")
 
     # and save the actual table:
-    create_connection_table(connections, GRAPH_DIR / f"{type_name}_connections.html")
+    create_connection_table(connections, TABLES_DIR / f"{type_name}_connections.html")
 
 
 def get_fw_connections(type_meta_fw: pd.DataFrame, fw_edges: pd.DataFrame, fw_mapping):
@@ -2117,6 +2118,7 @@ def clear_build_directory():
     for dir in (
         BUILD_DIR,
         GRAPH_DIR,
+        TABLES_DIR,
         SUMMARY_TYPES_DIR,
         SYNONYMS_DIR,
         # THUMBNAILS_DIR,
