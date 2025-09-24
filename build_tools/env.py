@@ -76,6 +76,7 @@ BUILD_DIR = REPO_BASE_PATH / "docs/build"
 SUMMARY_TYPES_DIR = BUILD_DIR / "summary_types"
 THUMBNAILS_DIR = BUILD_DIR / "thumbnails"
 GRAPH_DIR = BUILD_DIR / "graphs"
+TABLES_DIR = BUILD_DIR / "tables"
 SUPERTYPE_DIR = BUILD_DIR / "supertypes"
 HEMILINEAGE_DIR = BUILD_DIR / "hemilineages"
 SYNONYMS_DIR = BUILD_DIR / "synonyms"
@@ -98,6 +99,7 @@ for dir in (
     SUMMARY_TYPES_DIR,
     THUMBNAILS_DIR,
     GRAPH_DIR,
+    TABLES_DIR,
     SUPERTYPE_DIR,
     HEMILINEAGE_DIR,
     SYNONYMS_DIR,
