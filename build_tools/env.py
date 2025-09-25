@@ -17,11 +17,11 @@ FUTURE_SESSION = FuturesSession(max_workers=10)
 #####
 # A basic Neuroglancer scene to use as a base for the visualisation
 #####
-NGL_BASE_URL = "https://clio-ng.janelia.org/#!gs://flyem-user-links/short/2025-04-14.184028.199909.json"
+NGL_BASE_URL = "https://neuroglancer-demo.appspot.com/#!gs://flyem-user-links/short/MaleCNS-v0.9-brain.json"
 NGL_BASE_SCENE = ngl.Scene.from_url(NGL_BASE_URL)
-NGL_BASE_URL_VNC = "https://clio-ng.janelia.org/#!gs://flyem-user-links/short/2025-04-28.110026.374589.json"
+NGL_BASE_URL_VNC = "https://neuroglancer-demo.appspot.com/#!gs://flyem-user-links/short/MaleCNS-v0.9-vnc.json"
 NGL_BASE_SCENE_VNC = ngl.Scene.from_url(NGL_BASE_URL_VNC)
-NGL_BASE_URL_TOP = "https://clio-ng.janelia.org/#!gs://flyem-user-links/short/2025-04-28.112442.425526.json"
+NGL_BASE_URL_TOP = "https://neuroglancer-demo.appspot.com/#!gs://flyem-user-links/short/MaleCNS-v0.9-brain+vnc.json"
 NGL_BASE_SCENE_TOP = ngl.Scene.from_url(NGL_BASE_URL_TOP)
 
 # Make sure the segmentation layers are empty
@@ -36,9 +36,13 @@ for scene in (NGL_BASE_SCENE, NGL_BASE_SCENE_VNC, NGL_BASE_SCENE_TOP):
 #####
 # URLs for the MCNS and FlyWire meta data
 #####
-FLYWIRE_SOURCE = NGL_BASE_SCENE.layers["female (FlyWire)"][
-    "source"
-]  # precomputed layer
+# FLYWIRE_SOURCE = NGL_BASE_SCENE.layers["female (FlyWire)"][
+#     "source"
+# ]  # precomputed layer
+# print(f"Philipp's flywire source: {FLYWIRE_SOURCE}")
+# switched to hardcoded; the ng scene we use now has this info in an archived
+#   layer, and ngl.Scene.from_url() doesn't load them
+FLYWIRE_SOURCE = "precomputed://https://flyem.mrc-lmb.cam.ac.uk/flyconnectome/flywire2mcns/783_v2"
 
 # used to get DVID info from the NG scene, but that info is no longer there;
 #     now it's passed in via env var
