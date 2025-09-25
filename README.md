@@ -35,6 +35,7 @@ In addition, you need to set the following environment variables to set up for f
 - `CAVE_SECRET`: API token for CAVE (FlyWire); this should not be needed, and I will remove it in the future
 - `SEATABLE_SERVER`: URL for our FlyTable instance
 - `SEATABLE_TOKEN`: API token for FlyTable
+- `DVID_SERVER`, `DVID_NODE`: URL and UUID for DVID for accessing meshes for generating thumbnails
 
 To build the website locally, run:
 

@@ -2,6 +2,8 @@
 Some global variables and constants for the build tools.
 """
 
+import os
+
 import nglscenes as ngl
 import navis.interfaces.neuprint as neu
 
@@ -37,9 +39,14 @@ for scene in (NGL_BASE_SCENE, NGL_BASE_SCENE_VNC, NGL_BASE_SCENE_TOP):
 FLYWIRE_SOURCE = NGL_BASE_SCENE.layers["female (FlyWire)"][
     "source"
 ]  # precomputed layer
-MCNS_SOURCE = NGL_BASE_SCENE.layers["maleCNS"]["source"]["url"]  # DVID layer
-DVID_SERVER = "https://" + MCNS_SOURCE.replace("dvid://https://", "").split("/")[0]
-DVID_NODE = MCNS_SOURCE.replace("dvid://https://", "").split("/")[1]
+
+# used to get DVID info from the NG scene, but that info is no longer there;
+#     now it's passed in via env var
+# MCNS_SOURCE = NGL_BASE_SCENE.layers["maleCNS"]["source"]["url"]  # DVID layer
+# DVID_SERVER = "https://" + MCNS_SOURCE.replace("dvid://https://", "").split("/")[0]
+# DVID_NODE = MCNS_SOURCE.replace("dvid://https://", "").split("/")[1]
+DVID_SERVER = os.environ["DVID_SERVER"]
+DVID_NODE = os.environ["DVID_NODE"]
 
 print(f"Using DVID server: {DVID_SERVER}")
 print(f"Using DVID node: {DVID_NODE}")
