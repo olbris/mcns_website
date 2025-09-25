@@ -31,14 +31,14 @@ tags:
                 <div style="display: table-cell;"> {{ meta.class if meta.class != "N/A" else "None" }} </div>
             </div>
             <hr style="margin: 0;">
-            {% if meta.itoleeHl != "N/A" %}
+            {% if meta.itoleeHl and meta.itoleeHl != "N/A" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Ito & Lee): </div>
                 <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.itoleeHl }}">{{ meta.itoleeHl }}</a> </div>
             </div>
             <hr style="margin: 0;">
             {% endif %}
-            {% if meta.trumanHl != "N/A" %}
+            {% if meta.trumanHl and meta.trumanHl != "N/A" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Truman): </div>
                 <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.trumanHl }}">{{ meta.trumanHl }}</a> </div>
@@ -47,7 +47,11 @@ tags:
             {% endif %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Supertype: </div>
+                {% if meta.supertype != "N/A" %}
                 <div style="display: table-cell;"> <a href="../../supertypes/{{ meta.supertype }}">{{ meta.supertype }}</a> </div>
+                {% else %}
+                <div style="display: table-cell;"> {{ meta.supertype }} </div>
+                {% endif %}
             </div>
             <hr style="margin: 0;">
             <div style="display: table-row">

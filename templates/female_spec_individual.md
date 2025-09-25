@@ -31,7 +31,7 @@ tags:
                 <div style="display: table-cell;"> {{ meta.cell_class if meta.cell_class != "N/A" else "None" }} </div>
             </div>
             <hr style="margin: 0;">
-            {% if meta.ito_lee_hemilineage != "N/A" %}
+            {% if meta.ito_lee_hemilineage and meta.ito_lee_hemilineage != "N/A" %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell;"> <b>Hemilineage</b> (Ito & Lee): </div>
                 <div style="display: table-cell;"> <a href="../../hemilineages/{{ meta.ito_lee_hemilineage }}">{{ meta.ito_lee_hemilineage }}</a> </div>
@@ -40,7 +40,11 @@ tags:
             {% endif %}
             <div style="display: table-row">
                 <div style="width: 50%; display: table-cell; font-weight: bold;"> Supertype: </div>
+                {% if meta.supertype != "N/A" %}
                 <div style="display: table-cell;"> <a href="../../supertypes/{{ meta.supertype }}">{{ meta.supertype }}</a> </div>
+                {% else %}
+                <div style="display: table-cell;">{{ meta.supertype }}</div> 
+                {% endif %}
             </div>
             <hr style="margin: 0;">
             <div style="display: table-row">

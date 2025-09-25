@@ -1356,6 +1356,9 @@ def make_supertype_pages(
     if random_pages is not None:
         supertypes_meta = random.sample(supertypes_meta, k=min(random_pages, len(supertypes_meta)))
     for record in supertypes_meta:
+        if record["supertype"] == "N/A":
+            continue
+
         print(
             f"  Generating summary page for supertype '{record['supertype']}'...",
             flush=True,
