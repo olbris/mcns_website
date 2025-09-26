@@ -1467,25 +1467,30 @@ def make_synonyms_pages(
 
         # Parse synonyms
         for string in synonyms.split(";"):
-            # Check if the synonym follows the "{Author} {Year}: {Synonym}"
-            if ":" not in string:
-                continue
-            # Split into publication and the actual synonym
-            author_year, syn = string.split(":")
-            author_year, syn = author_year.strip(), syn.strip()
-            # We might have multiple authors/years, "Author1 Year1, Author2 Year2: Synonym"
-            author_year_parsed = []
-            for ay in author_year.split(";"):
-                ay = ay.strip()
-                # Check that we have author + year
-                if not re.match(r"^[A-Za-z ]+ \d{4}$", ay):
-                    print(f"  Invalid author/year format: {ay}", flush=True)
+            try:
+                # Check if the synonym follows the "{Author} {Year}: {Synonym}"
+                if ":" not in string:
                     continue
-                author_year_parsed.append(ay)
-            if not author_year_parsed:
-                print(f"  No valid author/year found for {syn}", flush=True)
+                # Split into publication and the actual synonym
+                author_year, syn = string.split(":")
+                author_year, syn = author_year.strip(), syn.strip()
+                # We might have multiple authors/years, "Author1 Year1, Author2 Year2: Synonym"
+                author_year_parsed = []
+                for ay in author_year.split(";"):
+                    ay = ay.strip()
+                    # Check that we have author + year
+                    if not re.match(r"^[A-Za-z ]+ \d{4}$", ay):
+                        print(f"  Invalid author/year format: {ay}", flush=True)
+                        continue
+                    author_year_parsed.append(ay)
+                if not author_year_parsed:
+                    print(f"  No valid author/year found for {syn}", flush=True)
+                    continue
+                author_year_str = ", ".join(author_year_parsed)
+            except ValueError as e:
+                print(f"  WARNING: Failed to parse synonym: {string} in {synonyms}", flush=True)
+                author_year_str = ""
                 continue
-            author_year_str = ", ".join(author_year_parsed)
 
             # Make sure the synonym is in the dictionary
             if syn not in synonyms_meta:
