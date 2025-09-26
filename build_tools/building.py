@@ -762,7 +762,10 @@ def extract_type_data(mcns_meta, fw_meta):
             try:
                 author_year, syn = syn.split(":")
             except ValueError:
-                raise ValueError(f"  Failed to parse synonym: {syn}")
+                # replace this with a warning for now
+                print(f"  WARNING: Failed to parse synonym: {syn} in type {record['type']}", flush=True)
+                continue
+                # raise ValueError(f"  Failed to parse synonym: {syn} in type {record['type']}")
             author_year, syn = author_year.strip(), syn.strip()
             synonyms_linked.append(
                 f'{author_year}: <a href="../../synonyms/{syn}">{syn}</a>'
