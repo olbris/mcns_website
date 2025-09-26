@@ -19,6 +19,14 @@ icon: material/home
 
 <div class="grid cards" markdown>
 
+-   :fontawesome-solid-images:{ .lg .middle } __Overview__
+
+    ---
+
+    Read about the Fly EM Project's reconstruction of the connectome of the full _Drosophila_ male CNS.
+
+    [:octicons-arrow-right-24: Overview](https://www.janelia.org/project-team/flyem/male-cns-connectome)
+
 -   :fontawesome-brands-wpexplorer:{ .lg .middle } __Explore__
 
     ---
@@ -35,14 +43,6 @@ icon: material/home
     dimorphic neurons catalogue.
 
     [:octicons-arrow-right-24: Dimorphism explorer](build/dimorphism_overview.md)
-
--   :fontawesome-solid-images:{ .lg .middle } __Media__
-
-    ---
-
-    Check out the media gallery for images and videos of the connectome.
-
-    [:octicons-arrow-right-24: Media](media.md)
 
 -   :material-cloud-download-outline:{ .lg .middle } __Download__
 
