@@ -23,10 +23,10 @@ extra_css:
 
 nav:
   - Home: index.md
+  - Overview: https://www.janelia.org/project-team/flyem/male-cns-connectome
   - Explore:
       - Overview: explore/index.md
   - Dimorphism: build/dimorphism_overview.md
-  - Gallery: media.md
   - Download: download.md
   - Cite: cite.md
 
