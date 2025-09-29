@@ -207,7 +207,7 @@ def make_dimorphism_pages(
                     )
             except Exception as e:
                 print(f"  Failed to generate connections table for {record['type']}: {e}", flush=True)
-        record["connections_file_rel"] = f"../../graphs/{record['type']}_connections.html"
+        record["connections_file_rel"] = f"../../tables/{record['type']}_connections.html"
 
         if not skip_thumbnails:
             # Generate the thumbnail
@@ -271,7 +271,7 @@ def make_dimorphism_pages(
                     )
             except Exception as e:
                 print(f"  Failed to generate connections table for {record['type']}: {e}", flush=True)
-        record["connections_file_rel"] = f"../../graphs/{record['type']}_connections.html"
+        record["connections_file_rel"] = f"../../tables/{record['type']}_connections.html"
 
         if not skip_thumbnails:
             # Generate the thumbnail
@@ -333,7 +333,7 @@ def make_dimorphism_pages(
                     )
             except Exception as e:
                 print(f"  Failed to generate connections table for {record['type']}: {e}", flush=True)
-        record["connections_file_rel"] = f"../../graphs/{record['type']}_connections.html"
+        record["connections_file_rel"] = f"../../tables/{record['type']}_connections.html"
 
         if not skip_thumbnails:
             # Generate the thumbnail

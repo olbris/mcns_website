@@ -1,8 +1,9 @@
 site_name: MaleCNS connectome
 site_description: Project website for the MaleCNS connectome
-site_url: https://mydomain.org/mysite
+site_url: https://flyconnectome.github.io/mcns_website/
+# or if we deploy from Fly EM's GitHub org:
+# site_url: https://janelia-flyem.github.io/mcns_website/
 copyright: Copyright &copy; 2025, Howard Hughes Medical Institute
-
 
 
 plugins:
