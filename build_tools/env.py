@@ -14,15 +14,80 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 # FutureSession for async requests
 FUTURE_SESSION = FuturesSession(max_workers=10)
 
+
+
+#####
+# Philipp's nglscenes library excludes archived layers; I need them;
+# reimplement a couple functions here until I have time to submit
+# a PR to nglscenes
+# original source is https://github.com/schlegelp/nglscenes; it's GPL3
+# by Philipp, who is a collaborator on this project, which is also GPL3,
+# so in spirit if not letter of the license, this should be fine
+#####
+
+# additional imports needed for this hack
+import inspect
+from urllib.parse import urldefrag
+
+from nglscenes import utils
+from nglscenes.scenes import LAYER_FACTORY
+
+def parse_layers_with_archived(layer, skip_unknown=False):
+    if isinstance(layer, list):
+        res = [parse_layers_with_archived(l) for l in layer]
+        # Drop "None" if skip_unknown=True
+        return [l for l in res if l]
+
+    if not isinstance(layer, dict):
+        raise TypeError(f'Expected dicts or list thereof, got "{type(layer)}"')
+
+    ty = layer.get("type", "NA")
+    if ty not in LAYER_FACTORY:
+        if skip_unknown:
+            return
+        raise ValueError(
+            f'Unable to parse layer "{layer.get("name", "")}" of type "{ty}"'
+        )
+
+    return LAYER_FACTORY[ty](**layer)
+
+class SceneWithArchived(ngl.Scene):
+    @classmethod
+    def from_string(cls, string, skip_archived=True):
+        """Generate scene from either a JSON or URL."""
+
+        # Extract json
+        state = utils.parse_json_scene(string)
+
+        # If input is URL, reuse the base URL
+        sig = inspect.signature(cls)
+        has_url = "url" in sig.parameters or "base_url" in sig.parameters
+        if utils.is_url(string) and has_url:
+            url, frag = urldefrag(string)
+            x = cls(base_url=url)
+        else:
+            x = cls()
+
+        layers = parse_layers_with_archived(state.pop("layers", []), skip_archived)
+
+        # Update properties
+        x._state.update(state)
+
+        if layers:
+            x.add_layers(*layers)
+
+        return x
+
+
 #####
 # A basic Neuroglancer scene to use as a base for the visualisation
 #####
 NGL_BASE_URL = "https://neuroglancer-demo.appspot.com/#!gs://flyem-user-links/short/MaleCNS-v0.9-brain.json"
-NGL_BASE_SCENE = ngl.Scene.from_url(NGL_BASE_URL)
+NGL_BASE_SCENE = SceneWithArchived.from_url(NGL_BASE_URL)
 NGL_BASE_URL_VNC = "https://neuroglancer-demo.appspot.com/#!gs://flyem-user-links/short/MaleCNS-v0.9-vnc.json"
-NGL_BASE_SCENE_VNC = ngl.Scene.from_url(NGL_BASE_URL_VNC)
+NGL_BASE_SCENE_VNC = SceneWithArchived.from_url(NGL_BASE_URL_VNC)
 NGL_BASE_URL_TOP = "https://neuroglancer-demo.appspot.com/#!gs://flyem-user-links/short/MaleCNS-v0.9-brain+vnc.json"
-NGL_BASE_SCENE_TOP = ngl.Scene.from_url(NGL_BASE_URL_TOP)
+NGL_BASE_SCENE_TOP = SceneWithArchived.from_url(NGL_BASE_URL_TOP)
 
 # Make sure the segmentation layers are empty
 for scene in (NGL_BASE_SCENE, NGL_BASE_SCENE_VNC, NGL_BASE_SCENE_TOP):
@@ -139,3 +204,5 @@ NEUPRINT_SEARCH_URL = "https://neuprint-cns.janelia.org/results?dataset=cns&qt=f
 
 # Connectivity search
 NEUPRINT_CONNECTIVITY_URL = "https://neuprint-cns.janelia.org/results?dataset=cns&qt=simpleconnection&q=1&qr%5B0%5D%5Bcode%5D=sc&qr%5B0%5D%5Bds%5D=cns&qr%5B0%5D%5Bpm%5D%5Bdataset%5D=cns&qr%5B0%5D%5Bpm%5D%5Benable_contains%5D=true&qr%5B0%5D%5Bpm%5D%5Bneuron_name%5D={neuron_name}&qr%5B0%5D%5Bpm%5D%5Bfind_inputs%5D=false&qr%5B0%5D%5BvisProps%5D%5BpaginateExpansion%5D=true&tab=0"
+
+
