@@ -10,7 +10,7 @@ hide:
 ## Programmatic access
 
 You can explore the dataset interactively using the [neuPrint platform](https://neuprint.janelia.org/).
-To access the data programmatically, we recommend using the dedicated Python and an R packages:
+To access the data programmatically, we recommend using the dedicated Python and R packages:
 
 === "Python"
 
@@ -74,21 +74,41 @@ To access the data programmatically, we recommend using the dedicated Python and
 
 ## Bulk download
 
-Alternatively, you can also bulk download the individual data products:
-
-### Graph
-
-Download the graph as edge list + associated meta data files from:
-
-### Annotations
-
-### Skeletons
+Alternatively, you can also bulk download the individual data products. Data tables are provided in [Apache Arrow Feather](https://arrow.apache.org/docs/python/feather.html) file format, which can be read using `pyarrow` or `pandas`.
 
 ### Image data
 
 ### Segmentation
 
-### Synapse locations
+### Neuron annotations
+- table of neuron properties (20 MB): [body-annotations-male-cns-v0.9-minconf-0.5.feather](https://storage.googleapis.com/flyem-male-cns/v0.9/connectome-data/flat-connectome/body-annotations-male-cns-v0.9-minconf-0.5.feather)
+- table of neurotransmitter information for each neuron (44 MB): [body-neurotransmitters-male-cns-v0.9.feather](https://storage.googleapis.com/flyem-male-cns/v0.9/connectome-data/flat-connectome/body-neurotransmitters-male-cns-v0.9.feather)
+
+### Skeletons
+
+
+
+
+
+
+
+
+
+
+
+
+### Connectivity
+- table of neuron-to-neuron connections and their strengths; this is the full connection graph (1.1 GB): [connectome-weights-male-cns-v0.9-minconf-0.5.feather](https://storage.googleapis.com/flyem-male-cns/v0.9/connectome-data/flat-connectome/connectome-weights-male-cns-v0.9-minconf-0.5.feather)
+- table of neurons with overall connection strengths (780 MB): [body-stats-male-cns-v0.9-minconf-0.5.feather](https://storage.googleapis.com/flyem-male-cns/v0.9/connectome-data/flat-connectome/body-stats-male-cns-v0.9-minconf-0.5.feather)
+
+
+### Synapse data
+- table of each synapse, with neurons and confidences (6.8 GB): [syn-partners-male-cns-v0.9-minconf-0.5.feather](https://storage.googleapis.com/flyem-male-cns/v0.9/connectome-data/flat-connectome/syn-partners-male-cns-v0.9-minconf-0.5.feather)
+- table of each synapse location, neuron, and compartment (12.7 GB): [syn-points-male-cns-v0.9-minconf-0.5.feather](https://storage.googleapis.com/flyem-male-cns/v0.9/connectome-data/flat-connectome/syn-points-male-cns-v0.9-minconf-0.5.feather)
+- table of each synapse with all neurotransmitter confidences (2.7 GB): [tbar-neurotransmitters-male-cns-v0.9.feather](https://storage.googleapis.com/flyem-male-cns/v0.9/connectome-data/flat-connectome/tbar-neurotransmitters-male-cns-v0.9.feather)
+
+
+
 
 <div style="text-align: center;">
     <p>The Male CNS is <a href="https://creativecommons.org/licenses/by/4.0/">licensed under CC-BY</a>.</p>
