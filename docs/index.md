@@ -33,7 +33,7 @@ icon: material/home
 
     Interactively explore the dataset using neuPrint.
 
-    [:octicons-arrow-right-24: NeuPrint](#)
+    [:octicons-arrow-right-24: NeuPrint](https://neuprint.janelia.org/?dataset=male-cns%3Av0.9&qt=findneurons)
 
 -   :material-gender-male-female:{ .lg .middle } __Dimorphism__
 

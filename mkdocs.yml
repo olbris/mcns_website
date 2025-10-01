@@ -28,7 +28,6 @@ nav:
       - Overview: explore/index.md
   - Dimorphism: build/dimorphism_overview.md
   - Download: download.md
-  - Cite: cite.md
 
 theme:
   name: material
