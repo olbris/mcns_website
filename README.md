@@ -47,9 +47,16 @@ uv run mkdocs build
 You can set various flags to control the build process:
 
 - `--skip-thumbnails`: Skip generation of the thumbnails (by far the most expensive part)
-- `--skip-graphs`: Skip generation of the network graphs (second most expensive part)
+- `--skip-tables`: Skip generation of the connections tables
 - `--update-metadata`: Force updating the metadata (neuPrint/FlyTable)
 - `--clear-build`: Clear the build directory before building
+- `--clear-site`: Clear the site directory before building
+
+Obsolete:
+- `--skip-graphs`: Skip generation of the network graphs (second most expensive part)
+    - graphs are no longer included on the pages
+    - the option now defaults to `True`
+
 
 To serve the website locally, run:
 
@@ -57,9 +64,16 @@ To serve the website locally, run:
 uv run mkdocs serve
 ```
 
+
+
 ### Github
 
 On Github the website is built and deployed using a Github actions
 workflow that is triggered on every push to the `main` branch. It
 can also be triggered manually using the workflow dispatch feature.
 
+To manually deploy the website to GitHub pages, run:
+
+```bash
+uv run mkdocs gh-deploy --force
+```
